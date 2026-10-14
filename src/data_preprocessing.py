@@ -258,3 +258,9 @@ print(df.shape)
 df.to_csv("data/hotel_bookings_cleaned.csv", index=False)
 
 print("\nCleaned dataset saved to 'data/hotel_bookings_cleaned.csv")
+
+print("\nFinal is_canceled distribution:")
+print(df["is_canceled"].value_counts())
+
+print("\nFinal is_canceled percentages:")
+print(df["is_canceled"].value_counts(normalize=True) * 100)
