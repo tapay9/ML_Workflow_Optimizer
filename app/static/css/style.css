@@ -1,0 +1,556 @@
+/* =========================================
+   GLOBAL
+========================================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #0b0f17;
+    color: #f5f7fa;
+}
+
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+
+/* =========================================
+   SIDEBAR
+========================================= */
+
+.sidebar {
+    width: 250px;
+    min-height: 100vh;
+
+    background: #111722;
+    border-right: 1px solid #242c3a;
+
+    padding: 28px 20px;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    margin-bottom: 45px;
+}
+
+.brand-icon {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #6c63ff;
+    border-radius: 10px;
+
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.brand h2 {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.brand span {
+    color: #8d96a5;
+    font-size: 13px;
+}
+
+
+/* =========================================
+   SIDEBAR NAVIGATION
+========================================= */
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    padding: 12px 14px;
+
+    text-decoration: none;
+
+    color: #9ba4b3;
+
+    border-radius: 8px;
+
+    font-size: 14px;
+
+    transition: 0.2s;
+}
+
+.nav-item:hover {
+    background: #1a2230;
+    color: white;
+}
+
+.nav-item.active {
+    background: #222a3a;
+    color: white;
+}
+
+.nav-item span {
+    font-size: 18px;
+}
+
+
+/* =========================================
+   PIPELINE STATUS
+========================================= */
+
+.sidebar-footer {
+    margin-top: auto;
+
+    padding: 14px;
+
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    background: #151c28;
+
+    border: 1px solid #252e3d;
+    border-radius: 9px;
+
+    color: #aab2c0;
+    font-size: 12px;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+
+    display: inline-block;
+
+    background: #41d68d;
+
+    border-radius: 50%;
+}
+
+
+/* =========================================
+   MAIN DASHBOARD
+========================================= */
+
+.main-content {
+    flex: 1;
+
+    padding: 42px 48px;
+
+    background: #0b0f17;
+}
+
+
+/* =========================================
+   DASHBOARD HEADER
+========================================= */
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 38px;
+}
+
+.page-label {
+    color: #6c63ff;
+
+    font-size: 11px;
+    font-weight: bold;
+
+    letter-spacing: 1.6px;
+
+    margin-bottom: 8px;
+}
+
+.dashboard-header h1 {
+    font-size: 30px;
+
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    color: #8993a3;
+
+    font-size: 14px;
+}
+
+.header-status {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    padding: 10px 14px;
+
+    background: #111722;
+
+    border: 1px solid #242c3a;
+    border-radius: 8px;
+
+    color: #aab2c0;
+
+    font-size: 12px;
+}
+
+
+/* =========================================
+   OVERVIEW CARDS
+========================================= */
+
+.stats-grid {
+    display: grid;
+
+    grid-template-columns: repeat(4, 1fr);
+
+    gap: 18px;
+
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background: #111722;
+
+    border: 1px solid #242c3a;
+    border-radius: 12px;
+
+    padding: 20px;
+
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+
+    border-color: #3a4558;
+}
+
+.stat-card.featured {
+    border-color: #4c46a8;
+
+    background: linear-gradient(
+        145deg,
+        #15192a,
+        #17162b
+    );
+}
+
+.stat-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 22px;
+}
+
+.stat-label {
+    color: #7f8999;
+
+    font-size: 10px;
+    font-weight: bold;
+
+    letter-spacing: 1px;
+}
+
+.stat-icon {
+    color: #7770ff;
+
+    font-size: 17px;
+}
+
+.stat-card h2 {
+    font-size: 27px;
+
+    margin-bottom: 6px;
+}
+
+.stat-card p {
+    color: #7f8999;
+
+    font-size: 12px;
+}
+
+
+/* =========================================
+   MAIN DASHBOARD GRID
+========================================= */
+
+.dashboard-grid {
+    display: grid;
+
+    grid-template-columns: 2fr 1fr;
+
+    gap: 18px;
+
+    align-items: stretch;
+}
+
+.dashboard-panel {
+    background: #111722;
+
+    border: 1px solid #242c3a;
+    border-radius: 12px;
+
+    padding: 24px;
+}
+
+
+/* =========================================
+   PANEL HEADERS
+========================================= */
+
+.panel-header {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.panel-label {
+    color: #7770ff;
+
+    font-size: 10px;
+    font-weight: bold;
+
+    letter-spacing: 1.2px;
+
+    margin-bottom: 7px;
+}
+
+.panel-header h2 {
+    font-size: 18px;
+}
+
+.panel-badge {
+    padding: 6px 10px;
+
+    background: #1a2030;
+
+    border: 1px solid #2c3547;
+    border-radius: 6px;
+
+    color: #9ba4b3;
+
+    font-size: 10px;
+}
+
+.panel-description {
+    margin-top: 9px;
+    margin-bottom: 26px;
+
+    color: #7f8999;
+
+    font-size: 12px;
+
+    line-height: 1.5;
+}
+
+
+/* =========================================
+   MODEL PERFORMANCE
+========================================= */
+
+.model-list {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 24px;
+}
+
+.model-info {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 9px;
+}
+
+.model-info h3 {
+    font-size: 13px;
+
+    margin-bottom: 3px;
+}
+
+.model-info span {
+    color: #737d8d;
+
+    font-size: 10px;
+}
+
+.model-info strong {
+    font-size: 14px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 6px;
+
+    background: #202837;
+
+    border-radius: 20px;
+
+    overflow: hidden;
+}
+
+.progress-value {
+    height: 100%;
+
+    background: #6c63ff;
+
+    border-radius: 20px;
+}
+
+.progress-value.decision-tree {
+    width: 81.89%;
+}
+
+.progress-value.logistic-regression {
+    width: 81.14%;
+}
+
+.progress-value.knn {
+    width: 77.94%;
+}
+
+
+/* =========================================
+   DATASET OVERVIEW
+========================================= */
+
+.dataset-overview {
+    min-height: 100%;
+}
+
+.dataset-details {
+    display: flex;
+
+    flex-direction: column;
+
+    width: 100%;
+}
+
+.dataset-row {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: center;
+
+    width: 100%;
+
+    padding: 13px 0;
+
+    border-bottom: 1px solid #222a38;
+}
+
+.dataset-row span {
+    color: #858f9f;
+
+    font-size: 11px;
+}
+
+.dataset-row strong {
+    color: #f5f7fa;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+
+/* =========================================
+   ENGINEERED FEATURES
+========================================= */
+
+.feature-section {
+    margin-top: 22px;
+}
+
+.feature-section > p {
+    color: #7770ff;
+
+    font-size: 9px;
+    font-weight: bold;
+
+    letter-spacing: 1px;
+
+    margin-bottom: 11px;
+}
+
+.feature-tags {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 7px;
+}
+
+.feature-tags span {
+    display: inline-block;
+
+    padding: 6px 8px;
+
+    background: #1a2030;
+
+    border: 1px solid #2a3344;
+    border-radius: 5px;
+
+    color: #aab2c0;
+
+    font-size: 9px;
+
+    font-family: monospace;
+}
+
+
+/* =========================================
+   RESPONSIVE DESIGN
+========================================= */
+
+@media (max-width: 1100px) {
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+@media (max-width: 700px) {
+
+    .sidebar {
+        width: 190px;
+    }
+
+    .main-content {
+        padding: 30px 24px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
