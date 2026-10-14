@@ -4,17 +4,357 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>ML Workflow Optimizer</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body>
 
-    <h1>ML Workflow Optimizer</h1>
+    <div class="dashboard-container">
 
-    <p>
-        AI-powered machine learning workflow management,
-        monitoring, and optimization.
-    </p>
+        <!-- Sidebar -->
+        <aside class="sidebar">
+
+            <div class="brand">
+                <div class="brand-icon">ML</div>
+
+                <div>
+                    <h2>ML Workflow</h2>
+                    <span>Optimizer</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+
+                <a href="#" class="nav-item active">
+                    <span>▦</span>
+                    Dashboard
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span>◈</span>
+                    Models
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span>⌁</span>
+                    Experiments
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span>◉</span>
+                    Monitoring
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span>✦</span>
+                    AI Insights
+                </a>
+
+            </nav>
+
+            <div class="sidebar-footer">
+                <span class="status-dot"></span>
+                ML Pipeline Active
+            </div>
+
+        </aside>
+
+
+        <!-- Main Dashboard -->
+        <main class="main-content">
+
+            <!-- Header -->
+            <header class="dashboard-header">
+
+                <div>
+                    <p class="page-label">ML WORKSPACE</p>
+
+                    <h1>Dashboard</h1>
+
+                    <p class="subtitle">
+                        Monitor your machine learning workflow,
+                        experiments, and model performance.
+                    </p>
+                </div>
+
+                <div class="header-status">
+                    <span class="status-dot"></span>
+                    Pipeline Active
+                </div>
+
+            </header>
+
+
+            <!-- Overview Cards -->
+            <section class="stats-grid">
+
+                <div class="stat-card">
+
+                    <div class="stat-top">
+                        <span class="stat-label">
+                            DATASET RECORDS
+                        </span>
+
+                        <span class="stat-icon">▦</span>
+                    </div>
+
+                    <h2>119,144</h2>
+
+                    <p>Cleaned hotel bookings</p>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-top">
+                        <span class="stat-label">
+                            DATASET COLUMNS
+                        </span>
+
+                        <span class="stat-icon">◫</span>
+                    </div>
+
+                    <h2>29</h2>
+
+                    <p>After preprocessing</p>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-top">
+                        <span class="stat-label">
+                            MODELS TRAINED
+                        </span>
+
+                        <span class="stat-icon">◇</span>
+                    </div>
+
+                    <h2>3</h2>
+
+                    <p>Baseline classifiers</p>
+
+                </div>
+
+
+                <div class="stat-card featured">
+
+                    <div class="stat-top">
+                        <span class="stat-label">
+                            BEST BASELINE
+                        </span>
+
+                        <span class="stat-icon">↗</span>
+                    </div>
+
+                    <h2>81.89%</h2>
+
+                    <p>Decision Tree</p>
+
+                </div>
+
+            </section>
+
+
+            <!-- Main Dashboard Grid -->
+            <section class="dashboard-grid">
+
+                <!-- Model Performance -->
+                <div class="dashboard-panel model-performance">
+
+                    <div class="panel-header">
+
+                        <div>
+                            <p class="panel-label">
+                                MODEL PERFORMANCE
+                            </p>
+
+                            <h2>
+                                Baseline Model Comparison
+                            </h2>
+                        </div>
+
+                        <span class="panel-badge">
+                            3 Models
+                        </span>
+
+                    </div>
+
+                    <p class="panel-description">
+                        Accuracy results from the current
+                        baseline classification models.
+                    </p>
+
+
+                    <div class="model-list">
+
+                        <!-- Decision Tree -->
+                        <div class="model-result">
+
+                            <div class="model-info">
+
+                                <div>
+                                    <h3>Decision Tree</h3>
+                                    <span>Best baseline</span>
+                                </div>
+
+                                <strong>81.89%</strong>
+
+                            </div>
+
+                            <div class="progress-bar">
+                                <div class="progress-value decision-tree">
+                                </div>
+                            </div>
+
+                        </div>
+
+
+                        <!-- Logistic Regression -->
+                        <div class="model-result">
+
+                            <div class="model-info">
+
+                                <div>
+                                    <h3>
+                                        Logistic Regression
+                                    </h3>
+
+                                    <span>
+                                        Baseline classifier
+                                    </span>
+                                </div>
+
+                                <strong>81.14%</strong>
+
+                            </div>
+
+                            <div class="progress-bar">
+                                <div class="progress-value logistic-regression">
+                                </div>
+                            </div>
+
+                        </div>
+
+
+                        <!-- KNN -->
+                        <div class="model-result">
+
+                            <div class="model-info">
+
+                                <div>
+                                    <h3>
+                                        K-Nearest Neighbors
+                                    </h3>
+
+                                    <span>
+                                        Baseline classifier
+                                    </span>
+                                </div>
+
+                                <strong>77.94%</strong>
+
+                            </div>
+
+                            <div class="progress-bar">
+                                <div class="progress-value knn">
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Dataset Overview -->
+                <div class="dashboard-panel dataset-overview">
+
+                    <div class="panel-header">
+
+                        <div>
+                            <p class="panel-label">
+                                DATASET
+                            </p>
+
+                            <h2>
+                                Dataset Overview
+                            </h2>
+                        </div>
+
+                        <span class="panel-badge">
+                            Cleaned
+                        </span>
+
+                    </div>
+
+                    <p class="panel-description">
+                        Hotel booking data prepared for
+                        cancellation prediction.
+                    </p>
+
+
+                    <div class="dataset-details">
+
+                        <div class="dataset-row">
+                            <span>Target Variable</span>
+                            <strong>is_canceled</strong>
+                        </div>
+
+                        <div class="dataset-row">
+                            <span>Not Canceled</span>
+                            <strong>62.95%</strong>
+                        </div>
+
+                        <div class="dataset-row">
+                            <span>Canceled</span>
+                            <strong>37.05%</strong>
+                        </div>
+
+                        <div class="dataset-row">
+                            <span>Missing Values</span>
+                            <strong>0</strong>
+                        </div>
+
+                        <div class="dataset-row">
+                            <span>Duplicates</span>
+                            <strong>0</strong>
+                        </div>
+
+                    </div>
+
+
+                    <!-- Engineered Features -->
+                    <div class="feature-section">
+
+                        <p>ENGINEERED FEATURES</p>
+
+                        <div class="feature-tags">
+
+                            <span>total_guests</span>
+
+                            <span>total_nights</span>
+
+                            <span>hotel_type</span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
 
 </body>
 
