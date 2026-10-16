@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI Insights | ML Workflow Optimizer</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-icon">ML</div>
+
+            <div>
+                <h2>ML Workflow</h2>
+                <span>Optimizer</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <a href="{{ url_for('home') }}" class="nav-item">
+                <span>▦</span>
+                Dashboard
+            </a>
+
+            <a href="{{ url_for('models') }}" class="nav-item">
+                <span>◈</span>
+                Models
+            </a>
+
+            <a href="{{ url_for('experiments') }}" class="nav-item">
+                <span>⌁</span>
+                Experiments
+            </a>
+
+            <a href="{{ url_for('monitoring') }}" class="nav-item">
+                <span>◉</span>
+                Monitoring
+            </a>
+
+            <a href="{{ url_for('ai_insights') }}" class="nav-item active">
+                <span>✦</span>
+                AI Insights
+            </a>
+
+        </nav>
+
+        <div class="sidebar-footer">
+            <span class="status-dot"></span>
+            ML Pipeline Active
+        </div>
+
+    </aside>
+
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Header -->
+        <header class="dashboard-header">
+
+            <div>
+                <p class="page-label">
+                    ML WORKSPACE
+                </p>
+
+                <h1>AI Insights</h1>
+
+                <p class="subtitle">
+                    Analyze model performance and generate
+                    recommendations for the machine learning workflow.
+                </p>
+            </div>
+
+            <div class="header-status">
+                <span class="status-dot"></span>
+                Analysis Ready
+            </div>
+
+        </header>
+
+
+        <!-- Summary Cards -->
+        <section class="stats-grid">
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+                    <span class="stat-label">
+                        MODELS ANALYZED
+                    </span>
+
+                    <span class="stat-icon">✦</span>
+                </div>
+
+                <h2>
+                    {{ model_results|length }}
+                </h2>
+
+                <p>
+                    Trained classifiers
+                </p>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+                    <span class="stat-label">
+                        TOP ACCURACY
+                    </span>
+
+                    <span class="stat-icon">↗</span>
+                </div>
+
+                <h2>
+                    {{ "%.2f"|format(best_model["test_acc"] * 100) }}%
+                </h2>
+
+                <p>
+                    {{ best_model["model"] }}
+                </p>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+                    <span class="stat-label">
+                        BEST ROC-AUC
+                    </span>
+
+                    <span class="stat-icon">◇</span>
+                </div>
+
+                {% set best_auc = model_results|max(attribute="roc_auc") %}
+
+                <h2>
+                    {{ "%.4f"|format(best_auc["roc_auc"]) }}
+                </h2>
+
+                <p>
+                    {{ best_auc["model"] }}
+                </p>
+
+            </div>
+
+
+            <div class="stat-card featured">
+
+                <div class="stat-top">
+                    <span class="stat-label">
+                        AI STATUS
+                    </span>
+
+                    <span class="stat-icon">✦</span>
+                </div>
+
+                <h2>
+                    {% if ai_insight %}
+                        Connected
+                    {% else %}
+                        Ready
+                    {% endif %}
+                </h2>
+
+                <p>
+                    Anthropic API
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- Performance Insights -->
+        <section class="dashboard-panel ai-panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <p class="panel-label">
+                        AI MODEL ANALYSIS
+                    </p>
+
+                    <h2>
+                        Performance Insights
+                    </h2>
+
+                </div>
+
+                <span class="panel-badge">
+                    AI
+                </span>
+
+            </div>
+
+
+            <p class="panel-description">
+                Review model performance, generalization,
+                and areas that may need improvement.
+            </p>
+
+
+            <div class="insight-grid">
+
+                <!-- Best Accuracy -->
+                <div class="insight-card">
+
+                    <div class="insight-icon">
+                        ↗
+                    </div>
+
+                    <div>
+
+                        <span class="insight-label">
+                            PERFORMANCE
+                        </span>
+
+                        <h3>
+                            Highest Test Accuracy
+                        </h3>
+
+                        <p>
+                            {{ best_model["model"] }} currently has the
+                            highest test accuracy at
+                            {{ "%.2f"|format(best_model["test_acc"] * 100) }}%.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Overfitting -->
+                <div class="insight-card">
+
+                    <div class="insight-icon">
+                        !
+                    </div>
+
+                    <div>
+
+                        <span class="insight-label">
+                            GENERALIZATION
+                        </span>
+
+                        <h3>
+                            Overfitting Detection
+                        </h3>
+
+                        <p>
+                            Models with larger differences between
+                            training and testing accuracy may require
+                            additional tuning or regularization.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ROC-AUC -->
+                <div class="insight-card">
+
+                    <div class="insight-icon">
+                        ◇
+                    </div>
+
+                    <div>
+
+                        <span class="insight-label">
+                            CLASSIFICATION
+                        </span>
+
+                        <h3>
+                            ROC-AUC Comparison
+                        </h3>
+
+                        <p>
+                            Logistic Regression currently provides
+                            strong ranking performance for identifying
+                            cancellation risk.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Hyperparameter Tuning -->
+                <div class="insight-card">
+
+                    <div class="insight-icon">
+                        ⚙
+                    </div>
+
+                    <div>
+
+                        <span class="insight-label">
+                            OPTIMIZATION
+                        </span>
+
+                        <h3>
+                            Hyperparameter Tuning
+                        </h3>
+
+                        <p>
+                            Model parameters can be adjusted to improve
+                            generalization and reduce overfitting before
+                            final deployment.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- AI Recommendations -->
+        <section class="dashboard-panel ai-panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <p class="panel-label">
+                        AI RECOMMENDATIONS
+                    </p>
+
+                    <h2>
+                        Optimization Suggestions
+                    </h2>
+
+                </div>
+
+                <span class="panel-badge">
+                    Anthropic
+                </span>
+
+            </div>
+
+
+            <p class="panel-description">
+                AI-generated recommendations use the current
+                experiment results to suggest possible improvements.
+            </p>
+
+
+            <div class="ai-recommendation-box">
+
+                <div class="ai-recommendation-header">
+
+                    <span class="ai-symbol">
+                        ✦
+                    </span>
+
+                    <div>
+
+                        <h3>
+                            AI Workflow Assistant
+                        </h3>
+
+                        <p>
+                            Model performance analysis and optimization recommendations.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Anthropic Response -->
+                <div class="ai-placeholder">
+
+                    {% if ai_insight %}
+
+                        <p style="white-space: pre-line;">
+                            {{ ai_insight }}
+                        </p>
+
+                    {% elif ai_error %}
+
+                        <p>
+                            {{ ai_error }}
+                        </p>
+
+                    {% else %}
+
+                        <p>
+                            No AI recommendations are available yet.
+                        </p>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+</body>
+
+</html>

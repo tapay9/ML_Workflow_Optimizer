@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Models | ML Workflow Optimizer</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-icon">ML</div>
+
+            <div>
+                <h2>ML Workflow</h2>
+                <span>Optimizer</span>
+            </div>
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <a href="{{ url_for('home') }}" class="nav-item">
+                <span>▦</span>
+                Dashboard
+            </a>
+
+            <a href="{{ url_for('models') }}" class="nav-item active">
+                <span>◈</span>
+                Models
+            </a>
+
+            <a href="{{ url_for('experiments') }}" class="nav-item">
+                <span>⌁</span>
+                Experiments
+            </a>
+
+            <a href="{{ url_for('monitoring') }}" class="nav-item">
+                <span>◉</span>
+                Monitoring
+            </a>
+
+            <a href="{{ url_for('ai_insights') }}" class="nav-item">
+                <span>✦</span>
+                AI Insights
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-footer">
+            <span class="status-dot"></span>
+            ML Pipeline Active
+        </div>
+
+    </aside>
+
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Header -->
+        <header class="dashboard-header">
+
+            <div>
+                <p class="page-label">
+                    ML WORKSPACE
+                </p>
+
+                <h1>Models</h1>
+
+                <p class="subtitle">
+                    Compare trained machine learning models
+                    and evaluate their performance.
+                </p>
+            </div>
+
+            <div class="header-status">
+                <span class="status-dot"></span>
+                3 Models Trained
+            </div>
+
+        </header>
+
+
+        <!-- Model Cards -->
+        <section class="models-page-grid">
+
+            {% for result in model_results %}
+
+            <div class="model-detail-card">
+
+                <div class="model-detail-header">
+
+                    <div>
+                        <p class="panel-label">
+                            TRAINED MODEL
+                        </p>
+
+                        <h2>
+                            {{ result["model"] }}
+                        </h2>
+                    </div>
+
+
+                    {% if result["model"] == best_model["model"] %}
+
+                    <span class="panel-badge">
+                        Best Accuracy
+                    </span>
+
+                    {% endif %}
+
+                </div>
+
+
+                <div class="model-metrics">
+
+                    <div class="metric-box">
+                        <span>Test Accuracy</span>
+
+                        <strong>
+                            {{ "%.2f"|format(result["test_acc"] * 100) }}%
+                        </strong>
+                    </div>
+
+
+                    <div class="metric-box">
+                        <span>Macro-F1</span>
+
+                        <strong>
+                            {{ "%.4f"|format(result["macro_f1"]) }}
+                        </strong>
+                    </div>
+
+
+                    <div class="metric-box">
+                        <span>ROC-AUC</span>
+
+                        <strong>
+                            {{ "%.4f"|format(result["roc_auc"]) }}
+                        </strong>
+                    </div>
+
+
+                    <div class="metric-box">
+                        <span>Cancellation Recall</span>
+
+                        <strong>
+                            {{ "%.2f"|format(result["recall_canceled"] * 100) }}%
+                        </strong>
+                    </div>
+
+                </div>
+
+
+                <!-- Overfitting Information -->
+                <div class="model-status">
+
+                    <span>Train Accuracy</span>
+
+                    <strong>
+                        {{ "%.2f"|format(result["train_acc"] * 100) }}%
+                    </strong>
+
+                </div>
+
+
+                <div class="model-status">
+
+                    <span>Test Accuracy</span>
+
+                    <strong>
+                        {{ "%.2f"|format(result["test_acc"] * 100) }}%
+                    </strong>
+
+                </div>
+
+
+                <div class="model-status">
+
+                    <span>Train-Test Gap</span>
+
+                    <strong>
+                        {{ "%.2f"|format(result["overfit_gap"] * 100) }}%
+                    </strong>
+
+                </div>
+
+
+                {% if result["overfit_gap"] > 0.05 %}
+
+                <div class="model-warning">
+                    ⚠ Possible overfitting detected
+                </div>
+
+                {% else %}
+
+                <div class="model-good">
+                    ✓ Stable train/test performance
+                </div>
+
+                {% endif %}
+
+            </div>
+
+            {% endfor %}
+
+        </section>
+
+    </main>
+
+</div>
+
+</body>
+
+</html>

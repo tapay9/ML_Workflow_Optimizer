@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Monitoring | ML Workflow Optimizer</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-icon">ML</div>
+
+            <div>
+                <h2>ML Workflow</h2>
+                <span>Optimizer</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <a href="{{ url_for('home') }}" class="nav-item">
+                <span>▦</span>
+                Dashboard
+            </a>
+
+            <a href="{{ url_for('models') }}" class="nav-item">
+                <span>◈</span>
+                Models
+            </a>
+
+            <a href="{{ url_for('experiments') }}" class="nav-item">
+                <span>⌁</span>
+                Experiments
+            </a>
+
+            <a href="{{ url_for('monitoring') }}" class="nav-item active">
+                <span>◉</span>
+                Monitoring
+            </a>
+
+            <a href="{{ url_for('ai_insights') }}" class="nav-item">
+                <span>✦</span>
+                AI Insights
+            </a>
+
+        </nav>
+
+        <div class="sidebar-footer">
+            <span class="status-dot"></span>
+            ML Pipeline Active
+        </div>
+
+    </aside>
+
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <header class="dashboard-header">
+
+            <div>
+                <p class="page-label">ML WORKSPACE</p>
+
+                <h1>Monitoring</h1>
+
+                <p class="subtitle">
+                    Visualize model performance and monitor
+                    machine learning experiment results.
+                </p>
+            </div>
+
+            <div class="header-status">
+                <span class="status-dot"></span>
+                Monitoring Active
+            </div>
+
+        </header>
+
+
+        <!-- Monitoring Summary -->
+        <section class="stats-grid">
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+                    <span class="stat-label">MODELS MONITORED</span>
+                    <span class="stat-icon">◉</span>
+                </div>
+
+                <h2>{{ model_results|length }}</h2>
+                <p>Current baseline models</p>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+                    <span class="stat-label">TOP ACCURACY</span>
+                    <span class="stat-icon">↗</span>
+                </div>
+
+                <h2>
+                    {{ "%.2f"|format(best_model["test_acc"] * 100) }}%
+                </h2>
+
+                <p>{{ best_model["model"] }}</p>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+                    <span class="stat-label">DATASET RECORDS</span>
+                    <span class="stat-icon">▦</span>
+                </div>
+
+                <h2>119,144</h2>
+                <p>Bookings analyzed</p>
+
+            </div>
+
+
+            <div class="stat-card featured">
+
+                <div class="stat-top">
+                    <span class="stat-label">PIPELINE STATUS</span>
+                    <span class="stat-icon">✓</span>
+                </div>
+
+                <h2>Active</h2>
+                <p>Results available</p>
+
+            </div>
+
+        </section>
+
+
+        <!-- D3 Model Performance Chart -->
+        <section class="dashboard-panel monitoring-panel">
+
+            <div class="panel-header">
+
+                <div>
+                    <p class="panel-label">
+                        PERFORMANCE MONITORING
+                    </p>
+
+                    <h2>
+                        Model Performance Comparison
+                    </h2>
+                </div>
+
+                <span class="panel-badge">
+                    D3.js
+                </span>
+
+            </div>
+
+            <p class="panel-description">
+                Comparison of accuracy, Macro-F1, and ROC-AUC
+                across the trained models.
+            </p>
+
+            <div id="performance-chart"></div>
+
+        </section>
+
+
+        <!-- Overfitting Chart -->
+        <section class="dashboard-panel monitoring-panel">
+
+            <div class="panel-header">
+
+                <div>
+                    <p class="panel-label">
+                        GENERALIZATION MONITORING
+                    </p>
+
+                    <h2>
+                        Training vs Test Accuracy
+                    </h2>
+                </div>
+
+            </div>
+
+            <p class="panel-description">
+                Compare training and testing performance to
+                identify possible model overfitting.
+            </p>
+
+            <div id="overfitting-chart"></div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<!-- Model data from Flask -->
+<script>
+    const modelData = {{ model_results | tojson }};
+</script>
+
+<!-- D3.js -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+<!-- Monitoring Charts -->
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+
+</body>
+
+</html>
