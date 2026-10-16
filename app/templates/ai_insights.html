@@ -78,14 +78,19 @@
                 <h1>AI Insights</h1>
 
                 <p class="subtitle">
-                    Analyze model performance and generate
-                    recommendations for the machine learning workflow.
+                    Anthropic-powered analysis of model performance
+                    and optimization opportunities.
                 </p>
             </div>
 
             <div class="header-status">
                 <span class="status-dot"></span>
-                Analysis Ready
+
+                {% if performance_insights %}
+                    AI Analysis Ready
+                {% else %}
+                    Analysis Unavailable
+                {% endif %}
             </div>
 
         </header>
@@ -170,10 +175,10 @@
                 </div>
 
                 <h2>
-                    {% if ai_insight %}
+                    {% if performance_insights %}
                         Connected
                     {% else %}
-                        Ready
+                        Unavailable
                     {% endif %}
                 </h2>
 
@@ -186,7 +191,7 @@
         </section>
 
 
-        <!-- Performance Insights -->
+        <!-- Anthropic Performance Insights -->
         <section class="dashboard-panel ai-panel">
 
             <div class="panel-header">
@@ -194,7 +199,7 @@
                 <div>
 
                     <p class="panel-label">
-                        AI MODEL ANALYSIS
+                        ANTHROPIC MODEL ANALYSIS
                     </p>
 
                     <h2>
@@ -204,21 +209,24 @@
                 </div>
 
                 <span class="panel-badge">
-                    AI
+                    Anthropic
                 </span>
 
             </div>
 
 
             <p class="panel-description">
-                Review model performance, generalization,
-                and areas that may need improvement.
+                AI-generated analysis of model performance,
+                generalization, classification behavior, and
+                optimization opportunities.
             </p>
 
 
+            {% if performance_insights %}
+
             <div class="insight-grid">
 
-                <!-- Best Accuracy -->
+                <!-- Performance -->
                 <div class="insight-card">
 
                     <div class="insight-icon">
@@ -232,13 +240,11 @@
                         </span>
 
                         <h3>
-                            Highest Test Accuracy
+                            Model Performance
                         </h3>
 
                         <p>
-                            {{ best_model["model"] }} currently has the
-                            highest test accuracy at
-                            {{ "%.2f"|format(best_model["test_acc"] * 100) }}%.
+                            {{ performance_insights["performance"] }}
                         </p>
 
                     </div>
@@ -246,7 +252,7 @@
                 </div>
 
 
-                <!-- Overfitting -->
+                <!-- Generalization -->
                 <div class="insight-card">
 
                     <div class="insight-icon">
@@ -260,13 +266,11 @@
                         </span>
 
                         <h3>
-                            Overfitting Detection
+                            Generalization Analysis
                         </h3>
 
                         <p>
-                            Models with larger differences between
-                            training and testing accuracy may require
-                            additional tuning or regularization.
+                            {{ performance_insights["generalization"] }}
                         </p>
 
                     </div>
@@ -274,7 +278,7 @@
                 </div>
 
 
-                <!-- ROC-AUC -->
+                <!-- Classification -->
                 <div class="insight-card">
 
                     <div class="insight-icon">
@@ -288,13 +292,11 @@
                         </span>
 
                         <h3>
-                            ROC-AUC Comparison
+                            Classification Analysis
                         </h3>
 
                         <p>
-                            Logistic Regression currently provides
-                            strong ranking performance for identifying
-                            cancellation risk.
+                            {{ performance_insights["classification"] }}
                         </p>
 
                     </div>
@@ -302,7 +304,7 @@
                 </div>
 
 
-                <!-- Hyperparameter Tuning -->
+                <!-- Optimization -->
                 <div class="insight-card">
 
                     <div class="insight-icon">
@@ -316,13 +318,11 @@
                         </span>
 
                         <h3>
-                            Hyperparameter Tuning
+                            Optimization Opportunity
                         </h3>
 
                         <p>
-                            Model parameters can be adjusted to improve
-                            generalization and reduce overfitting before
-                            final deployment.
+                            {{ performance_insights["optimization"] }}
                         </p>
 
                     </div>
@@ -331,10 +331,23 @@
 
             </div>
 
+
+            {% else %}
+
+            <div class="ai-placeholder">
+
+                <p>
+                    {{ ai_error or "AI performance analysis is currently unavailable." }}
+                </p>
+
+            </div>
+
+            {% endif %}
+
         </section>
 
 
-        <!-- AI Recommendations -->
+        <!-- Anthropic Optimization Suggestions -->
         <section class="dashboard-panel ai-panel">
 
             <div class="panel-header">
@@ -359,8 +372,8 @@
 
 
             <p class="panel-description">
-                AI-generated recommendations use the current
-                experiment results to suggest possible improvements.
+                AI-generated recommendations based on the current
+                machine learning experiment results.
             </p>
 
 
@@ -379,7 +392,7 @@
                         </h3>
 
                         <p>
-                            Model performance analysis and optimization recommendations.
+                            Model analysis and optimization recommendations.
                         </p>
 
                     </div>
@@ -387,30 +400,50 @@
                 </div>
 
 
-                <!-- Anthropic Response -->
+                {% if optimization_suggestions %}
+
                 <div class="ai-placeholder">
 
-                    {% if ai_insight %}
+                    <p>
+                        <strong>1. Best Model:</strong>
+                        {{ optimization_suggestions["best_model"] }}
+                    </p>
 
-                        <p style="white-space: pre-line;">
-                            {{ ai_insight }}
-                        </p>
+                    <br>
 
-                    {% elif ai_error %}
+                    <p>
+                        <strong>2. Overfitting:</strong>
+                        {{ optimization_suggestions["overfitting"] }}
+                    </p>
 
-                        <p>
-                            {{ ai_error }}
-                        </p>
+                    <br>
 
-                    {% else %}
+                    <p>
+                        <strong>3. Performance Tradeoff:</strong>
+                        {{ optimization_suggestions["performance_tradeoff"] }}
+                    </p>
 
-                        <p>
-                            No AI recommendations are available yet.
-                        </p>
+                    <br>
 
-                    {% endif %}
+                    <p>
+                        <strong>4. Next Experiment:</strong>
+                        {{ optimization_suggestions["next_experiment"] }}
+                    </p>
 
                 </div>
+
+
+                {% else %}
+
+                <div class="ai-placeholder">
+
+                    <p>
+                        {{ ai_error or "AI optimization recommendations are currently unavailable." }}
+                    </p>
+
+                </div>
+
+                {% endif %}
 
             </div>
 
