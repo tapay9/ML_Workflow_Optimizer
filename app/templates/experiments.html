@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Experiments | ML Workflow Optimizer</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-icon">ML</div>
+
+            <div>
+                <h2>ML Workflow</h2>
+                <span>Optimizer</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <a href="{{ url_for('home') }}" class="nav-item">
+                <span>▦</span>
+                Dashboard
+            </a>
+
+            <a href="{{ url_for('models') }}" class="nav-item">
+                <span>◈</span>
+                Models
+            </a>
+
+            <a href="{{ url_for('experiments') }}" class="nav-item active">
+                <span>⌁</span>
+                Experiments
+            </a>
+
+            <a href="{{ url_for('monitoring') }}" class="nav-item">
+                <span>◉</span>
+                Monitoring
+            </a>
+
+            <a href="{{ url_for('ai_insights') }}   " class="nav-item">
+                <span>✦</span>
+                AI Insights
+            </a>
+
+        </nav>
+
+        <div class="sidebar-footer">
+            <span class="status-dot"></span>
+            ML Pipeline Active
+        </div>
+
+    </aside>
+
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Header -->
+        <header class="dashboard-header">
+
+            <div>
+                <p class="page-label">ML WORKSPACE</p>
+
+                <h1>Experiments</h1>
+
+                <p class="subtitle">
+                    Track and compare machine learning experiment results.
+                </p>
+            </div>
+
+            <div class="header-status">
+                <span class="status-dot"></span>
+                {{ model_results|length }} Experiments Complete
+            </div>
+
+        </header>
+
+
+        <!-- Overview Cards -->
+        <section class="stats-grid">
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+                    <span class="stat-label">
+                        TOTAL EXPERIMENTS
+                    </span>
+
+                    <span class="stat-icon">⌁</span>
+                </div>
+
+                <h2>{{ model_results|length }}</h2>
+
+                <p>Completed model runs</p>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+                    <span class="stat-label">
+                        TOP ACCURACY
+                    </span>
+
+                    <span class="stat-icon">↗</span>
+                </div>
+
+                <h2>
+                    {{ "%.2f"|format(best_model["test_acc"] * 100) }}%
+                </h2>
+
+                <p>
+                    {{ best_model["model"] }}
+                </p>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+                    <span class="stat-label">
+                        DATASET
+                    </span>
+
+                    <span class="stat-icon">▦</span>
+                </div>
+
+                <h2>119,144</h2>
+
+                <p>Cleaned booking records</p>
+
+            </div>
+
+
+            <div class="stat-card featured">
+
+                <div class="stat-top">
+                    <span class="stat-label">
+                        EXPERIMENT STATUS
+                    </span>
+
+                    <span class="stat-icon">✓</span>
+                </div>
+
+                <h2>Complete</h2>
+
+                <p>Baseline evaluation</p>
+
+            </div>
+
+        </section>
+
+
+        <!-- Experiment History -->
+        <section class="dashboard-panel experiments-panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <p class="panel-label">
+                        EXPERIMENT TRACKING
+                    </p>
+
+                    <h2>
+                        Model Experiment History
+                    </h2>
+
+                </div>
+
+                <span class="panel-badge">
+                    {{ model_results|length }} Runs
+                </span>
+
+            </div>
+
+
+            <p class="panel-description">
+                Results generated from the current model evaluation pipeline.
+            </p>
+
+
+            <div class="experiment-table-wrapper">
+
+                <table class="experiment-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>Experiment</th>
+                            <th>Model</th>
+                            <th>Accuracy</th>
+                            <th>Macro-F1</th>
+                            <th>ROC-AUC</th>
+                            <th>Train-Test Gap</th>
+                            <th>Status</th>
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for result in model_results %}
+
+                        <tr>
+
+                            <td>
+                                EXP-{{ "%03d"|format(loop.index) }}
+                            </td>
+
+                            <td class="experiment-model">
+                                {{ result["model"] }}
+                            </td>
+
+                            <td>
+                                {{ "%.2f"|format(result["test_acc"] * 100) }}%
+                            </td>
+
+                            <td>
+                                {{ "%.4f"|format(result["macro_f1"]) }}
+                            </td>
+
+                            <td>
+                                {{ "%.4f"|format(result["roc_auc"]) }}
+                            </td>
+
+                            <td>
+                                {{ "%.2f"|format(result["overfit_gap"] * 100) }}%
+                            </td>
+
+                            <td>
+
+                                <span class="experiment-complete">
+                                    Complete
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+</body>
+
+</html>

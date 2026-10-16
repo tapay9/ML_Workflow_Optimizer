@@ -34,12 +34,12 @@
                     Dashboard
                 </a>
 
-                <a href="#" class="nav-item">
+                <a href="{{ url_for('models') }}" class="nav-item">
                     <span>◈</span>
                     Models
                 </a>
 
-                <a href="#" class="nav-item">
+                <a href="{{ url_for('experiments') }}" class="nav-item">
                     <span>⌁</span>
                     Experiments
                 </a>
@@ -89,272 +89,254 @@
             </header>
 
 
-            <!-- Overview Cards -->
-            <section class="stats-grid">
+<!-- Overview Cards -->
+<section class="stats-grid">
 
-                <div class="stat-card">
+    <div class="stat-card">
 
-                    <div class="stat-top">
-                        <span class="stat-label">
-                            DATASET RECORDS
-                        </span>
+        <div class="stat-top">
+            <span class="stat-label">
+                DATASET RECORDS
+            </span>
 
-                        <span class="stat-icon">▦</span>
-                    </div>
+            <span class="stat-icon">▦</span>
+        </div>
 
-                    <h2>119,144</h2>
+        <h2>119,144</h2>
 
-                    <p>Cleaned hotel bookings</p>
-
-                </div>
-
-
-                <div class="stat-card">
-
-                    <div class="stat-top">
-                        <span class="stat-label">
-                            DATASET COLUMNS
-                        </span>
-
-                        <span class="stat-icon">◫</span>
-                    </div>
-
-                    <h2>29</h2>
-
-                    <p>After preprocessing</p>
-
-                </div>
-
-
-                <div class="stat-card">
-
-                    <div class="stat-top">
-                        <span class="stat-label">
-                            MODELS TRAINED
-                        </span>
-
-                        <span class="stat-icon">◇</span>
-                    </div>
-
-                    <h2>3</h2>
-
-                    <p>Baseline classifiers</p>
-
-                </div>
-
-
-                <div class="stat-card featured">
-
-                    <div class="stat-top">
-                        <span class="stat-label">
-                            BEST BASELINE
-                        </span>
-
-                        <span class="stat-icon">↗</span>
-                    </div>
-
-                    <h2>81.89%</h2>
-
-                    <p>Decision Tree</p>
-
-                </div>
-
-            </section>
-
-
-            <!-- Main Dashboard Grid -->
-            <section class="dashboard-grid">
-
-                <!-- Model Performance -->
-                <div class="dashboard-panel model-performance">
-
-                    <div class="panel-header">
-
-                        <div>
-                            <p class="panel-label">
-                                MODEL PERFORMANCE
-                            </p>
-
-                            <h2>
-                                Baseline Model Comparison
-                            </h2>
-                        </div>
-
-                        <span class="panel-badge">
-                            3 Models
-                        </span>
-
-                    </div>
-
-                    <p class="panel-description">
-                        Accuracy results from the current
-                        baseline classification models.
-                    </p>
-
-
-                    <div class="model-list">
-
-                        <!-- Decision Tree -->
-                        <div class="model-result">
-
-                            <div class="model-info">
-
-                                <div>
-                                    <h3>Decision Tree</h3>
-                                    <span>Best baseline</span>
-                                </div>
-
-                                <strong>81.89%</strong>
-
-                            </div>
-
-                            <div class="progress-bar">
-                                <div class="progress-value decision-tree">
-                                </div>
-                            </div>
-
-                        </div>
-
-
-                        <!-- Logistic Regression -->
-                        <div class="model-result">
-
-                            <div class="model-info">
-
-                                <div>
-                                    <h3>
-                                        Logistic Regression
-                                    </h3>
-
-                                    <span>
-                                        Baseline classifier
-                                    </span>
-                                </div>
-
-                                <strong>81.14%</strong>
-
-                            </div>
-
-                            <div class="progress-bar">
-                                <div class="progress-value logistic-regression">
-                                </div>
-                            </div>
-
-                        </div>
-
-
-                        <!-- KNN -->
-                        <div class="model-result">
-
-                            <div class="model-info">
-
-                                <div>
-                                    <h3>
-                                        K-Nearest Neighbors
-                                    </h3>
-
-                                    <span>
-                                        Baseline classifier
-                                    </span>
-                                </div>
-
-                                <strong>77.94%</strong>
-
-                            </div>
-
-                            <div class="progress-bar">
-                                <div class="progress-value knn">
-                                </div>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                <!-- Dataset Overview -->
-                <div class="dashboard-panel dataset-overview">
-
-                    <div class="panel-header">
-
-                        <div>
-                            <p class="panel-label">
-                                DATASET
-                            </p>
-
-                            <h2>
-                                Dataset Overview
-                            </h2>
-                        </div>
-
-                        <span class="panel-badge">
-                            Cleaned
-                        </span>
-
-                    </div>
-
-                    <p class="panel-description">
-                        Hotel booking data prepared for
-                        cancellation prediction.
-                    </p>
-
-
-                    <div class="dataset-details">
-
-                        <div class="dataset-row">
-                            <span>Target Variable</span>
-                            <strong>is_canceled</strong>
-                        </div>
-
-                        <div class="dataset-row">
-                            <span>Not Canceled</span>
-                            <strong>62.95%</strong>
-                        </div>
-
-                        <div class="dataset-row">
-                            <span>Canceled</span>
-                            <strong>37.05%</strong>
-                        </div>
-
-                        <div class="dataset-row">
-                            <span>Missing Values</span>
-                            <strong>0</strong>
-                        </div>
-
-                        <div class="dataset-row">
-                            <span>Duplicates</span>
-                            <strong>0</strong>
-                        </div>
-
-                    </div>
-
-
-                    <!-- Engineered Features -->
-                    <div class="feature-section">
-
-                        <p>ENGINEERED FEATURES</p>
-
-                        <div class="feature-tags">
-
-                            <span>total_guests</span>
-
-                            <span>total_nights</span>
-
-                            <span>hotel_type</span>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-        </main>
+        <p>Cleaned hotel bookings</p>
 
     </div>
+
+
+    <div class="stat-card">
+
+        <div class="stat-top">
+            <span class="stat-label">
+                DATASET COLUMNS
+            </span>
+
+            <span class="stat-icon">◫</span>
+        </div>
+
+        <h2>29</h2>
+
+        <p>After preprocessing</p>
+
+    </div>
+
+
+    <div class="stat-card">
+
+        <div class="stat-top">
+            <span class="stat-label">
+                MODELS TRAINED
+            </span>
+
+            <span class="stat-icon">◇</span>
+        </div>
+
+        <h2>3</h2>
+
+        <p>Baseline classifiers</p>
+
+    </div>
+
+
+    <div class="stat-card featured">
+
+        <div class="stat-top">
+            <span class="stat-label">
+                BEST BASELINE
+            </span>
+
+            <span class="stat-icon">↗</span>
+        </div>
+
+        <h2>
+             {{ "%.2f"|format(best_model["test_acc"] * 100) }}%
+        </h2>
+
+        <p>
+            {{ best_model["model"] }}
+        </p>
+
+    </div>
+
+</section>
+
+
+<!-- Main Dashboard Grid -->
+<section class="dashboard-grid">
+
+    <!-- Model Performance -->
+    <div class="dashboard-panel model-performance">
+
+        <div class="panel-header">
+
+            <div>
+                <p class="panel-label">
+                    MODEL PERFORMANCE
+                </p>
+
+                <h2>
+                    Baseline Model Comparison
+                </h2>
+            </div>
+
+            <span class="panel-badge">
+                3 Models
+            </span>
+
+        </div>
+
+        <p class="panel-description">
+            Accuracy results from the current
+            baseline classification models.
+        </p>
+
+
+        <!-- Dynamic Model Results -->
+        <div class="model-list">
+
+            {% for result in model_results %}
+
+            <div class="model-result">
+
+                <div class="model-info">
+
+                    <div>
+
+                        <h3>
+                            {{ result["model"] }}
+                        </h3>
+
+                        {% if result["model"] == "Decision Tree" %}
+
+                            <span>
+                                Best baseline
+                            </span>
+
+                        {% else %}
+
+                            <span>
+                                Baseline classifier
+                            </span>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <strong>
+                        {{ "%.2f"|format(result["test_acc"] * 100) }}%
+                    </strong>
+
+                </div>
+
+
+                <div class="progress-bar">
+
+                    <div
+                        class="progress-value"
+                        style="width: {{ result['test_acc'] * 100 }}%;">
+                    </div>
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+
+    <!-- Dataset Overview -->
+    <div class="dashboard-panel dataset-overview">
+
+        <div class="panel-header">
+
+            <div>
+                <p class="panel-label">
+                    DATASET
+                </p>
+
+                <h2>
+                    Dataset Overview
+                </h2>
+            </div>
+
+            <span class="panel-badge">
+                Cleaned
+            </span>
+
+        </div>
+
+
+        <p class="panel-description">
+            Hotel booking data prepared for
+            cancellation prediction.
+        </p>
+
+
+        <div class="dataset-details">
+
+            <div class="dataset-row">
+                <span>Target Variable</span>
+                <strong>is_canceled</strong>
+            </div>
+
+            <div class="dataset-row">
+                <span>Not Canceled</span>
+                <strong>62.95%</strong>
+            </div>
+
+            <div class="dataset-row">
+                <span>Canceled</span>
+                <strong>37.05%</strong>
+            </div>
+
+            <div class="dataset-row">
+                <span>Missing Values</span>
+                <strong>0</strong>
+            </div>
+
+            <div class="dataset-row">
+                <span>Duplicates</span>
+                <strong>0</strong>
+            </div>
+
+        </div>
+
+
+        <!-- Engineered Features -->
+        <div class="feature-section">
+
+            <p>
+                ENGINEERED FEATURES
+            </p>
+
+            <div class="feature-tags">
+
+                <span>total_guests</span>
+
+                <span>total_nights</span>
+
+                <span>hotel_type</span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+</main>
+
+</div>
 
 </body>
 
