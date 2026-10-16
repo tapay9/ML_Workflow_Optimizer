@@ -4,6 +4,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from anthropic import Anthropic
 import os
+import json
 
 # Load environment variables from .env
 load_dotenv()
@@ -81,7 +82,8 @@ def monitoring():
 def ai_insights():
     model_results, best_model = load_model_results()
 
-    ai_insight = None
+    performance_insights = None
+    optimization_suggestions = None
     ai_error = None
 
     try:
@@ -90,28 +92,70 @@ def ai_insights():
         )
 
         prompt = f"""
-You are an AI assistant inside an ML Workflow Optimizer.
+You are the AI assistant inside an ML Workflow Optimizer.
 
-The model predicts hotel booking cancellations.
+The machine learning task predicts whether a hotel booking
+will be canceled.
 
-Model results:
+Here are the current model results:
+
 {model_results}
 
-Give exactly 4 short recommendations:
+Analyze the results and return ONLY valid JSON.
 
-1. Best Model
-2. Overfitting
-3. Performance Tradeoff
-4. Next Experiment
+Use exactly this structure:
 
-Use 1-2 sentences for each section.
-Keep the entire response under 180 words.
-Do not use Markdown symbols such as **, #, or bullet points.
+{{
+    "performance_insights": {{
+        "performance": "short insight",
+        "generalization": "short insight",
+        "classification": "short insight",
+        "optimization": "short insight"
+    }},
+    "optimization_suggestions": {{
+        "best_model": "short recommendation",
+        "overfitting": "short recommendation",
+        "performance_tradeoff": "short recommendation",
+        "next_experiment": "short recommendation"
+    }}
+}}
+
+Requirements:
+
+Each value should be 1-2 short sentences.
+
+Performance should explain the strongest model performance.
+
+Generalization should identify whether any model appears
+to be overfitting or generalizing well.
+
+Classification should discuss useful classification metrics
+such as ROC-AUC, precision, recall, or F1.
+
+Optimization should explain what area could benefit from
+hyperparameter tuning.
+
+Best model should recommend the strongest overall model,
+considering more than accuracy alone.
+
+Overfitting should explain which model needs attention.
+
+Performance tradeoff should explain an important tradeoff
+between the models.
+
+Next experiment should recommend one useful next experiment
+or tuning step.
+
+Base every insight only on the model results provided.
+
+Do not use Markdown.
+
+Do not include text before or after the JSON.
 """
 
         message = client.messages.create(
             model="claude-sonnet-5-5",
-            max_tokens=450,
+            max_tokens=1200,
             messages=[
                 {
                     "role": "user",
@@ -120,7 +164,15 @@ Do not use Markdown symbols such as **, #, or bullet points.
             ]
         )
 
-        ai_insight = message.content[0].text
+        response_text = message.content[0].text.strip()
+
+        ai_data = json.loads(response_text)
+
+        performance_insights = ai_data["performance_insights"]
+
+        optimization_suggestions = ai_data[
+            "optimization_suggestions"
+        ]
 
     except Exception as error:
         print("Anthropic API error:", error)
@@ -133,10 +185,11 @@ Do not use Markdown symbols such as **, #, or bullet points.
         "ai_insights.html",
         model_results=model_results,
         best_model=best_model,
-        ai_insight=ai_insight,
+        performance_insights=performance_insights,
+        optimization_suggestions=optimization_suggestions,
         ai_error=ai_error
     )
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True) 
