@@ -78,8 +78,8 @@
                 <h1>AI Insights</h1>
 
                 <p class="subtitle">
-                    Anthropic-powered analysis of model performance
-                    and optimization opportunities.
+                    Anthropic-powered analysis of model performance,
+                    optimization opportunities, and deployment readiness.
                 </p>
             </div>
 
@@ -446,6 +446,162 @@
                 {% endif %}
 
             </div>
+
+        </section>
+
+
+        <!-- Deployment Readiness -->
+        <section class="dashboard-panel ai-panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <p class="panel-label">
+                        AI DEPLOYMENT ANALYSIS
+                    </p>
+
+                    <h2>
+                        Deployment Readiness
+                    </h2>
+
+                </div>
+
+                <span class="panel-badge">
+                    Anthropic
+                </span>
+
+            </div>
+
+
+            <p class="panel-description">
+                Anthropic evaluates the current model results to identify
+                the strongest deployment candidate, potential risks,
+                and recommended next steps.
+            </p>
+
+
+            {% if deployment_readiness %}
+
+            <div class="insight-grid">
+
+                <!-- Recommended Model -->
+                <div class="insight-card">
+
+                    <div class="insight-icon">
+                        ◈
+                    </div>
+
+                    <div>
+
+                        <span class="insight-label">
+                            RECOMMENDED MODEL
+                        </span>
+
+                        <h3>
+                            Deployment Candidate
+                        </h3>
+
+                        <p>
+                            {{ deployment_readiness["recommended_model"] }}
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Readiness Status -->
+                <div class="insight-card">
+
+                    <div class="insight-icon">
+                        ✓
+                    </div>
+
+                    <div>
+
+                        <span class="insight-label">
+                            READINESS STATUS
+                        </span>
+
+                        <h3>
+                            {{ deployment_readiness["status"] }}
+                        </h3>
+
+                        <p>
+                            {{ deployment_readiness["reason"] }}
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Deployment Risk -->
+                <div class="insight-card">
+
+                    <div class="insight-icon">
+                        !
+                    </div>
+
+                    <div>
+
+                        <span class="insight-label">
+                            DEPLOYMENT RISK
+                        </span>
+
+                        <h3>
+                            Primary Concern
+                        </h3>
+
+                        <p>
+                            {{ deployment_readiness["risk"] }}
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Next Step -->
+                <div class="insight-card">
+
+                    <div class="insight-icon">
+                        →
+                    </div>
+
+                    <div>
+
+                        <span class="insight-label">
+                            NEXT STEP
+                        </span>
+
+                        <h3>
+                            Before Deployment
+                        </h3>
+
+                        <p>
+                            {{ deployment_readiness["next_step"] }}
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            {% else %}
+
+            <div class="ai-placeholder">
+
+                <p>
+                    {{ ai_error or "Deployment readiness analysis is currently unavailable." }}
+                </p>
+
+            </div>
+
+            {% endif %}
 
         </section>
 

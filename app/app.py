@@ -84,6 +84,7 @@ def ai_insights():
 
     performance_insights = None
     optimization_suggestions = None
+    deployment_readiness = None
     ai_error = None
 
     try:
@@ -117,6 +118,13 @@ Use exactly this structure:
         "overfitting": "short recommendation",
         "performance_tradeoff": "short recommendation",
         "next_experiment": "short recommendation"
+    }},
+    "deployment_readiness": {{
+        "recommended_model": "model name",
+        "status": "Ready, Needs Improvement, or Not Ready",
+        "reason": "short explanation",
+        "risk": "short explanation",
+        "next_step": "short recommendation"
     }}
 }}
 
@@ -146,6 +154,27 @@ between the models.
 Next experiment should recommend one useful next experiment
 or tuning step.
 
+For deployment readiness:
+
+Recommended model should identify the strongest candidate
+for deployment based on the available evaluation results.
+
+Status must be exactly one of:
+Ready
+Needs Improvement
+Not Ready
+
+Reason should explain why the recommended model received
+that deployment-readiness status.
+
+Risk should identify the most important concern before
+deployment.
+
+Next step should recommend one action that should be taken
+before deployment.
+
+Do not claim that a model is already deployed.
+
 Base every insight only on the model results provided.
 
 Do not use Markdown.
@@ -155,7 +184,7 @@ Do not include text before or after the JSON.
 
         message = client.messages.create(
             model="claude-sonnet-5-5",
-            max_tokens=1200,
+            max_tokens=1500,
             messages=[
                 {
                     "role": "user",
@@ -168,10 +197,16 @@ Do not include text before or after the JSON.
 
         ai_data = json.loads(response_text)
 
-        performance_insights = ai_data["performance_insights"]
+        performance_insights = ai_data[
+            "performance_insights"
+        ]
 
         optimization_suggestions = ai_data[
             "optimization_suggestions"
+        ]
+
+        deployment_readiness = ai_data[
+            "deployment_readiness"
         ]
 
     except Exception as error:
@@ -187,9 +222,10 @@ Do not include text before or after the JSON.
         best_model=best_model,
         performance_insights=performance_insights,
         optimization_suggestions=optimization_suggestions,
+        deployment_readiness=deployment_readiness,
         ai_error=ai_error
     )
 
 
 if __name__ == "__main__":
-    app.run(debug=True) 
+    app.run(debug=True)
