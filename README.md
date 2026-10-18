@@ -1,5 +1,3 @@
-Machine Learning team project for COSC 472 at Morgan State University
-
 # Project Title: ML Workflow Optimizer
 
 > ML Workflow Optimizer is an AI-powered developer tool designed to streamline model deployment, model monitoring, experiment tracking, and hyperparameter optimization. Built with Python, Flask, D3.js, scikit-learn, and the Anthropic API, the platform provides interactive model visualizations and AI-driven insights to simplify the machine learning workflow. The project uses hotel booking cancellation prediction as a real-world use case to demonstrate the ML workflow.
