@@ -77,7 +77,7 @@ def test_checksum_detects_tampering(versions):
 def test_api_end_to_end(versions):
     app = Flask(__name__, template_folder=os.path.join(ROOT, "app", "templates"))
     app.add_url_rule("/", "home", lambda: "")
-    for ep in ("models", "experiments", "monitoring", "ai_insights"):
+    for ep in ("models", "experiments", "monitoring", "ai_insights", "demo"):
         app.add_url_rule(f"/{ep}", ep, lambda: "")
     app.register_blueprint(deploy_bp)
     c = app.test_client()

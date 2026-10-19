@@ -63,12 +63,17 @@ def encode_records(records, meta):
 
 
     # -------------------------------------------------
-    # Validate engineered features
+    # Validate engineered features when required
+    # by this model's saved schema
     # -------------------------------------------------
 
     engineered_required = [
-        "total_guests",
-        "total_nights"
+        column
+        for column in ["total_guests", "total_nights"]
+        if schema and (
+            column in schema.get("numeric", [])
+            or column in schema.get("categorical", [])
+        )
     ]
 
     missing_engineered = [
@@ -82,7 +87,6 @@ def encode_records(records, meta):
             "Missing engineered deployment fields: "
             + ", ".join(missing_engineered)
         )
-
 
     # -------------------------------------------------
     # Encode using saved model schema
