@@ -29,6 +29,7 @@ _here = Path.cwd().resolve()
 ROOT = next(p for p in [_here, *_here.parents] if (p / "src" / "db.py").exists())
 sys.path.insert(0, str(ROOT))
 from src.model_registry import DEFAULT_MODEL_NAME, build_input_schema, register_model
+from src.experiment_tracking import log_experiment
 
 
 # Data + models
@@ -529,16 +530,50 @@ def extra_diagnostics(X, y, groups, is_dummy, summary, skip_knn, Xtr, ytr, seed,
 
 
 def register_fitted(fitted, summary, X, groups, test_size, seed, max_rows):
-    """Save every fitted model as a new version in the SQLite model registry."""
-    schema = build_input_schema(X, groups)            # raw input fields + an example record
-    scope = f"{max_rows:,}-row subsample" if max_rows else "full data"
-    for name, (model, _, _) in fitted.items():
-        metrics = {k: float(v) for k, v in summary.loc[name].items()}
-        meta = register_model(model, DEFAULT_MODEL_NAME, metrics=metrics,
-                              features=list(X.columns), schema=schema,
-                              notes=f"{name} | test_size={test_size} seed={seed} | {scope}")
-        print(f"  registered {name:<20s} -> {DEFAULT_MODEL_NAME} v{meta['version']}")
+    """
+    Save every fitted model as a new version in the SQLite model registry
+    and automatically record the experiment in JSON format.
+    """
 
+    schema = build_input_schema(X, groups)
+    scope = f"{max_rows:,}-row subsample" if max_rows else "full data"
+
+    for name, (model, _, _) in fitted.items():
+        metrics = {
+            k: float(v)
+            for k, v in summary.loc[name].items()
+        }
+
+        # Register model in SQLite model registry
+        meta = register_model(
+            model,
+            DEFAULT_MODEL_NAME,
+            metrics=metrics,
+            features=list(X.columns),
+            schema=schema,
+            notes=f"{name} | test_size={test_size} seed={seed} | {scope}"
+        )
+
+        # Automatically record experiment in JSON storage
+        log_experiment(
+            model_name=name,
+            version=meta["version"],
+            hyperparameters=model.get_params(),
+            metrics=metrics,
+            metadata={
+                "dataset_scope": scope,
+                "test_size": test_size,
+                "random_seed": seed,
+                "target": "is_canceled",
+                "registry_model": DEFAULT_MODEL_NAME,
+                "registry_stage": meta.get("stage", "archived")
+            }
+        )
+
+        print(
+            f"  registered {name:<20s} -> "
+            f"{DEFAULT_MODEL_NAME} v{meta['version']}"
+        )
 
 def register_trained_models(fitted, summary, X, groups):
     """Register trained models in the SQLite model registry."""

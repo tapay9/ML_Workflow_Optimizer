@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Monitoring | ML Workflow Optimizer</title>
+    <title>Monitoring | ModelPilot</title>
 
     <link rel="stylesheet"
           href="{{ url_for('static', filename='css/style.css') }}">
@@ -13,51 +13,33 @@
 
 <body>
 
-<div class="dashboard-container">
-
     <!-- Sidebar -->
-    <aside class="sidebar">
+ <div class="dashboard-container">
 
-        <div class="brand">
-            <div class="brand-icon">ML</div>
+<aside class="sidebar">
 
-            <div>
-                <h2>ML Workflow</h2>
-                <span>Optimizer</span>
-            </div>
+    <div class="sidebar-brand">
+        <div class="brand-icon">MP</div>
+
+        <div class="brand-text">
+            <h2>ModelPilot</h2>
+            <span>ML Workflow Optimizer</span>
         </div>
+    </div>
 
         <nav class="sidebar-nav">
 
-            <a href="{{ url_for('home') }}" class="nav-item">
-                <span>▦</span>
-                Dashboard
-            </a>
-
-            <a href="{{ url_for('models') }}" class="nav-item">
-                <span>◈</span>
-                Models
-            </a>
-
-            <a href="{{ url_for('experiments') }}" class="nav-item">
-                <span>⌁</span>
-                Experiments
-            </a>
-
-            <a href="{{ url_for('monitoring') }}" class="nav-item active">
-                <span>◉</span>
-                Monitoring
-            </a>
-
-            <a href="{{ url_for('ai_insights') }}" class="nav-item">
-                <span>✦</span>
-                AI Insights
-            </a>
+            <a href="#" class="nav-item"><span>▦</span> Dashboard</a>
+            <a href="{{ url_for('models') }}" class="nav-item"><span>◈</span> Models</a>
+            <a href="{{ url_for('experiments') }}" class="nav-item"><span>⌁</span> Experiments</a>
+            <a href="{{ url_for('monitoring') }}" class="nav-item active"><span>◉</span> Monitoring</a>
+            <a href="{{ url_for('ai_insights') }}" class="nav-item"><span>✦</span> AI Insights</a>
 
             <a href="{{ url_for('deploy.deploy_page') }}" class="nav-item">
                 <span>⇪</span>
                 Deployment
             </a>
+            <a href="{{ url_for('demo') }}" class="nav-item"><span>⚡</span> Demo</a>
 
         </nav>
 
@@ -554,7 +536,7 @@
                         <td>
                             ${latency} ms
                         </td>
-                        
+
                         <td>
                             <span class="stage-pill ${stat.stage}">
                                 ${stat.stage.charAt(0).toUpperCase() + stat.stage.slice(1)}

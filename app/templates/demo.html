@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Live Demo | ModelPilot</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        .demo-container {
+            display: grid;
+            grid-template-columns: 1.5fr 0.8fr;
+            gap: 24px;
+            margin-top: 28px;
+        }
+
+        .demo-panel {
+            background: #111925;
+            border: 1px solid #2a3545;
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .demo-panel h2 {
+            margin-top: 0;
+            margin-bottom: 6px;
+        }
+
+        .demo-description {
+            color: #8f9bad;
+            margin-bottom: 22px;
+        }
+
+        .model-selector {
+            margin-bottom: 24px;
+            padding: 18px;
+            border: 1px solid #343f50;
+            border-radius: 10px;
+            background: #0d141e;
+        }
+
+        .model-selector label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            color: #8f9bad;
+            margin-bottom: 8px;
+        }
+
+        .model-selector select {
+            width: 100%;
+            padding: 11px 12px;
+            border-radius: 7px;
+            border: 1px solid #3a4658;
+            background: #ffffff;
+            color: #111111;
+            font-size: 14px;
+        }
+
+        .production-note {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #8f9bad;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #8f9bad;
+            margin-bottom: 6px;
+        }
+
+        .input-group input,
+        .input-group select {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #3a4658;
+            background: #ffffff;
+            color: #111111;
+            font-size: 14px;
+        }
+
+        .predict-button {
+            width: 100%;
+            margin-top: 22px;
+            padding: 12px;
+            border: none;
+            border-radius: 7px;
+            background: #6c5ce7;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .predict-button:hover {
+            opacity: 0.9;
+        }
+
+        .output-placeholder {
+            color: #7f8a9a;
+            text-align: center;
+            padding: 45px 10px;
+        }
+
+        .prediction-status {
+            font-size: 28px;
+            font-weight: 800;
+            margin: 16px 0 6px;
+        }
+
+        .prediction-subtitle {
+            color: #8f9bad;
+            margin-bottom: 24px;
+        }
+
+        .probability-box {
+            padding: 18px;
+            background: #0d141e;
+            border: 1px solid #343f50;
+            border-radius: 9px;
+            margin-bottom: 20px;
+        }
+
+        .probability-label {
+            color: #8f9bad;
+            font-size: 12px;
+            margin-bottom: 7px;
+        }
+
+        .probability-value {
+            font-size: 30px;
+            font-weight: 800;
+        }
+
+        .result-details {
+            border-top: 1px solid #303b4b;
+            margin-top: 18px;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 12px 0;
+            border-bottom: 1px solid #303b4b;
+        }
+
+        .result-row span {
+            color: #8f9bad;
+        }
+
+        .result-row strong {
+            text-align: right;
+        }
+
+        .production-badge {
+            display: inline-block;
+            padding: 4px 9px;
+            border-radius: 20px;
+            background: rgba(108, 92, 231, 0.18);
+            color: #a99cff;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .comparison-badge {
+            display: inline-block;
+            padding: 4px 9px;
+            border-radius: 20px;
+            background: #202a38;
+            color: #aeb8c6;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .error-message {
+            padding: 16px;
+            border: 1px solid #663c3c;
+            background: #261818;
+            border-radius: 8px;
+        }
+
+        @media (max-width: 1000px) {
+            .demo-container {
+                grid-template-columns: 1fr;
+            }
+
+            .input-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 650px) {
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-icon">ML</div>
+
+            <div>
+                <h2>ML Workflow</h2>
+                <span>Optimizer</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <a href="{{ url_for('home') }}" class="nav-item">
+                <span>▦</span>
+                Dashboard
+            </a>
+
+            <a href="{{ url_for('models') }}" class="nav-item">
+                <span>◈</span>
+                Models
+            </a>
+
+            <a href="{{ url_for('experiments') }}" class="nav-item">
+                <span>⌁</span>
+                Experiments
+            </a>
+
+            <a href="{{ url_for('monitoring') }}" class="nav-item">
+                <span>◉</span>
+                Monitoring
+            </a>
+
+            <a href="{{ url_for('ai_insights') }}" class="nav-item">
+                <span>✦</span>
+                AI Insights
+            </a>
+
+            <a href="{{ url_for('deploy.deploy_page') }}" class="nav-item">
+                <span>⇪</span>
+                Deployment
+            </a>
+            
+            <a href="{{ url_for('demo') }}" class="nav-item active">
+                <span>⚡</span>
+                Demo
+            </a>
+
+        </nav>
+
+        <div class="sidebar-footer">
+            <span class="status-dot"></span>
+            ML Pipeline Active
+        </div>
+
+    </aside>
+
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <header class="dashboard-header">
+
+            <div>
+                <p class="page-label">LIVE INFERENCE</p>
+
+                <h1>Real-Time Prediction Demo</h1>
+
+                <p class="subtitle">
+                    Compare predictions from the final registered
+                    hotel cancellation models.
+                </p>
+            </div>
+
+            <div class="header-status">
+                <span class="status-dot"></span>
+                Demo Active
+            </div>
+
+        </header>
+
+
+        <div class="demo-container">
+
+            <!-- Input Panel -->
+            <section class="demo-panel">
+
+                <h2>Booking Parameters</h2>
+
+                <p class="demo-description">
+                    Select a model and enter hotel booking information
+                    to generate a real-time cancellation prediction.
+                </p>
+
+
+                <!-- Model Selection -->
+                <div class="model-selector">
+
+                    <label for="model_version">
+                        MODEL VERSION
+                    </label>
+
+                    <select id="model_version">
+
+                        <option value="7">
+                            v7 — Logistic Regression
+                        </option>
+
+                        <option value="8" selected>
+                            v8 — Decision Tree (Production)
+                        </option>
+
+                        <option value="9">
+                            v9 — KNN
+                        </option>
+
+                    </select>
+
+                    <p class="production-note">
+                        v8 remains the deployed Production model.
+                        Selecting v7 or v9 here is for comparison only.
+                    </p>
+
+                </div>
+
+
+                <!-- Final Model Inputs -->
+                <div class="input-grid">
+
+                    <div class="input-group">
+                        <label>Lead Time (days)</label>
+                        <input id="lead_time"
+                               type="number"
+                               value="7">
+                    </div>
+
+
+                    <div class="input-group">
+                        <label>Arrival Week</label>
+                        <input id="arrival_date_week_number"
+                               type="number"
+                               value="1">
+                    </div>
+
+
+                    <div class="input-group">
+                        <label>Arrival Day of Month</label>
+                        <input id="arrival_date_day_of_month"
+                               type="number"
+                               value="1">
+                    </div>
+
+
+                    <div class="input-group">
+                        <label>Total Guests</label>
+                        <input id="total_guests"
+                               type="number"
+                               value="2"
+                               min="1">
+                    </div>
+
+
+                    <div class="input-group">
+                        <label>Total Nights</label>
+                        <input id="total_nights"
+                               type="number"
+                               value="3"
+                               min="1">
+                    </div>
+
+
+                    <div class="input-group">
+                        <label>Repeated Guest</label>
+
+                        <select id="is_repeated_guest">
+                            <option value="0" selected>No</option>
+                            <option value="1">Yes</option>
+                        </select>
+                    </div>
+
+
+                    <div class="input-group">
+                        <label>Previous Cancellations</label>
+                        <input id="previous_cancellations"
+                               type="number"
+                               value="0">
+                    </div>
+
+
+                    <div class="input-group">
+                        <label>Previous Bookings Not Canceled</label>
+                        <input id="previous_bookings_not_canceled"
+                               type="number"
+                               value="0">
+                    </div>
+
+
+                    <div class="input-group">
+                        <label>Booking Changes</label>
+                        <input id="booking_changes"
+                               type="number"
+                               value="0">
+                    </div>
+
+
+                    <div class="input-group">
+                        <label>Waiting List Days</label>
+                        <input id="days_in_waiting_list"
+                               type="number"
+                               value="0">
+                    </div>
+
+
+                    <div class="input-group">
+                        <label>Average Daily Rate (ADR)</label>
+                        <input id="adr"
+                               type="number"
+                               step="0.01"
+                               value="100">
+                    </div>
+
+
+                    <div class="input-group">
+                        <label>Car Parking Spaces</label>
+                        <input id="required_car_parking_spaces"
+                               type="number"
+                               value="0">
+                    </div>
+
+
+                    <div class="input-group">
+                        <label>Special Requests</label>
+                        <input id="total_of_special_requests"
+                               type="number"
+                               value="0">
+                    </div>
+
+
+                    <div class="input-group">
+                        <label>Meal</label>
+                        <input id="meal"
+                               type="text"
+                               value="BB">
+                    </div>
+
+
+                    <div class="input-group">
+                        <label>Country</label>
+                        <input id="country"
+                               type="text"
+                               value="PRT">
+                    </div>
+
+
+                    <div class="input-group">
+                        <label>Market Segment</label>
+                        <input id="market_segment"
+                               type="text"
+                               value="Online TA">
+                    </div>
+
+
+                    <div class="input-group">
+                        <label>Distribution Channel</label>
+                        <input id="distribution_channel"
+                               type="text"
+                               value="TA/TO">
+                    </div>
+
+
+                    <div class="input-group">
+                        <label>Reserved Room Type</label>
+                        <input id="reserved_room_type"
+                               type="text"
+                               value="A">
+                    </div>
+
+
+                    <div class="input-group">
+                        <label>Deposit Type</label>
+                        <input id="deposit_type"
+                               type="text"
+                               value="No Deposit">
+                    </div>
+
+
+                    <div class="input-group">
+                        <label>Customer Type</label>
+                        <input id="customer_type"
+                               type="text"
+                               value="Transient">
+                    </div>
+
+
+                    <div class="input-group">
+                        <label>City</label>
+                        <input id="city"
+                               type="text"
+                               value="Lisbon">
+                    </div>
+
+
+                    <div class="input-group">
+                        <label>Hotel Type</label>
+
+                        <select id="hotel_type">
+                            <option value="City Hotel" selected>
+                                City Hotel
+                            </option>
+
+                            <option value="Resort Hotel">
+                                Resort Hotel
+                            </option>
+                        </select>
+                    </div>
+
+                </div>
+
+
+                <button
+                    class="predict-button"
+                    id="predictButton"
+                    onclick="runPrediction()">
+
+                    Run Prediction
+
+                </button>
+
+            </section>
+
+
+            <!-- Output Panel -->
+            <section class="demo-panel">
+
+                <h2>Model Output</h2>
+
+                <div id="modelOutput">
+
+                    <div class="output-placeholder">
+
+                        Select a model and click
+                        <strong>Run Prediction</strong>
+                        to compute real-time inference.
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<script>
+
+async function runPrediction() {
+
+    const button =
+        document.getElementById("predictButton");
+
+    const output =
+        document.getElementById("modelOutput");
+
+
+    button.disabled = true;
+    button.textContent = "Running Prediction...";
+
+
+    const payload = {
+
+        model_version:
+            parseInt(
+                document.getElementById(
+                    "model_version"
+                ).value
+            ),
+
+        lead_time:
+            Number(
+                document.getElementById(
+                    "lead_time"
+                ).value
+            ),
+
+        arrival_date_week_number:
+            Number(
+                document.getElementById(
+                    "arrival_date_week_number"
+                ).value
+            ),
+
+        arrival_date_day_of_month:
+            Number(
+                document.getElementById(
+                    "arrival_date_day_of_month"
+                ).value
+            ),
+
+        total_guests:
+            Number(
+                document.getElementById(
+                    "total_guests"
+                ).value
+            ),
+
+        total_nights:
+            Number(
+                document.getElementById(
+                    "total_nights"
+                ).value
+            ),
+
+        is_repeated_guest:
+            Number(
+                document.getElementById(
+                    "is_repeated_guest"
+                ).value
+            ),
+
+        previous_cancellations:
+            Number(
+                document.getElementById(
+                    "previous_cancellations"
+                ).value
+            ),
+
+        previous_bookings_not_canceled:
+            Number(
+                document.getElementById(
+                    "previous_bookings_not_canceled"
+                ).value
+            ),
+
+        booking_changes:
+            Number(
+                document.getElementById(
+                    "booking_changes"
+                ).value
+            ),
+
+        days_in_waiting_list:
+            Number(
+                document.getElementById(
+                    "days_in_waiting_list"
+                ).value
+            ),
+
+        adr:
+            Number(
+                document.getElementById(
+                    "adr"
+                ).value
+            ),
+
+        required_car_parking_spaces:
+            Number(
+                document.getElementById(
+                    "required_car_parking_spaces"
+                ).value
+            ),
+
+        total_of_special_requests:
+            Number(
+                document.getElementById(
+                    "total_of_special_requests"
+                ).value
+            ),
+
+        meal:
+            document.getElementById(
+                "meal"
+            ).value,
+
+        country:
+            document.getElementById(
+                "country"
+            ).value,
+
+        market_segment:
+            document.getElementById(
+                "market_segment"
+            ).value,
+
+        distribution_channel:
+            document.getElementById(
+                "distribution_channel"
+            ).value,
+
+        reserved_room_type:
+            document.getElementById(
+                "reserved_room_type"
+            ).value,
+
+        deposit_type:
+            document.getElementById(
+                "deposit_type"
+            ).value,
+
+        customer_type:
+            document.getElementById(
+                "customer_type"
+            ).value,
+
+        city:
+            document.getElementById(
+                "city"
+            ).value,
+
+        hotel_type:
+            document.getElementById(
+                "hotel_type"
+            ).value
+    };
+
+
+    try {
+
+        const response = await fetch(
+            "{{ url_for('predict') }}",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify(payload)
+            }
+        );
+
+
+        const data = await response.json();
+
+
+        if (!response.ok || data.error) {
+
+            throw new Error(
+                data.error ||
+                "Prediction failed."
+            );
+        }
+
+
+        const cancelProbability =
+            data.probability_canceled * 100;
+
+
+        const stageClass =
+            data.stage === "Production"
+            ? "production-badge"
+            : "comparison-badge";
+
+
+        output.innerHTML = `
+
+            <p class="page-label">
+                PREDICTION RESULT
+            </p>
+
+            <div class="prediction-status">
+                ${data.status}
+            </div>
+
+            <p class="prediction-subtitle">
+                Hotel booking cancellation prediction
+            </p>
+
+
+            <div class="probability-box">
+
+                <div class="probability-label">
+                    CANCELLATION PROBABILITY
+                </div>
+
+                <div class="probability-value">
+                    ${cancelProbability.toFixed(1)}%
+                </div>
+
+            </div>
+
+
+            <div class="result-details">
+
+                <div class="result-row">
+                    <span>Version</span>
+                    <strong>
+                        v${data.version}
+                    </strong>
+                </div>
+
+
+                <div class="result-row">
+                    <span>Algorithm</span>
+                    <strong>
+                        ${data.algorithm}
+                    </strong>
+                </div>
+
+
+                <div class="result-row">
+                    <span>Registry Stage</span>
+
+                    <strong>
+                        <span class="${stageClass}">
+                            ${data.stage}
+                        </span>
+                    </strong>
+                </div>
+
+
+                <div class="result-row">
+                    <span>Latency</span>
+                    <strong>
+                        ${Number(
+                            data.latency_ms
+                        ).toFixed(2)} ms
+                    </strong>
+                </div>
+
+            </div>
+        `;
+
+
+    } catch (error) {
+
+        output.innerHTML = `
+
+            <div class="error-message">
+
+                <strong>
+                    Prediction Error
+                </strong>
+
+                <p>
+                    ${error.message}
+                </p>
+
+            </div>
+        `;
+
+    } finally {
+
+        button.disabled = false;
+
+        button.textContent =
+            "Run Prediction";
+    }
+}
+
+</script>
+
+</body>
+</html>

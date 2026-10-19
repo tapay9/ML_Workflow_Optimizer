@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Deployment | ML Workflow Optimizer</title>
+    <title>Deployment | ModelPilot</title>
 
     <link rel="stylesheet"
           href="{{ url_for('static', filename='css/style.css') }}">
@@ -15,17 +15,19 @@
 
 <div class="dashboard-container">
 
-    <!-- Sidebar -->
+    <!-- SIDEBAR -->
     <aside class="sidebar">
 
-        <div class="brand">
-            <div class="brand-icon">ML</div>
+        <div class="sidebar-brand">
+            <div class="brand-icon">MP</div>
 
-            <div>
-                <h2>ML Workflow</h2>
-                <span>Optimizer</span>
+            <div class="brand-text">
+                <h2>ModelPilot</h2>
+                <span>ML Workflow Optimizer</span>
             </div>
         </div>
+
+        <nav class="sidebar-nav">
 
 
         <nav class="sidebar-nav">
@@ -59,6 +61,7 @@
                 <span>⇪</span>
                 Deployment
             </a>
+            <a href="{{ url_for('demo') }}" class="nav-item"><span>⚡</span> Demo</a>
 
         </nav>
 

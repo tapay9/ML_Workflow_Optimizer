@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, jsonify
 import pandas as pd
 from pathlib import Path
 from dotenv import load_dotenv
@@ -6,6 +6,7 @@ from anthropic import Anthropic
 import os
 import sys
 import json
+import joblib
 
 # Load environment variables from .env
 load_dotenv()
@@ -15,6 +16,12 @@ app = Flask(__name__)
 # Project paths
 BASE_DIR = Path(__file__).resolve().parent.parent
 OUTPUT_DIR = BASE_DIR / "src" / "analysis_output"
+
+# Load Pre-trained Model & Feature Columns
+MODEL_PATH = OUTPUT_DIR / "dt_model_50_split.joblib"
+COLUMNS_PATH = OUTPUT_DIR / "model_columns.joblib"
+dt_model = joblib.load(MODEL_PATH) if MODEL_PATH.exists() else None
+model_columns = joblib.load(COLUMNS_PATH) if COLUMNS_PATH.exists() else []
 
 MODEL_RESULTS = OUTPUT_DIR / "model_comparison.csv"
 
@@ -31,7 +38,7 @@ if str(BASE_DIR) not in sys.path:
 # Model registry + deployment interface (SQLite)
 from deploy_routes import deploy_bp
 from src.model_registry import DEFAULT_MODEL_NAME, list_versions
-from src.serving import prediction_stats
+from src.serving import predict as serve_prediction, prediction_stats
 
 app.register_blueprint(deploy_bp)
 
@@ -159,6 +166,93 @@ def experiments():
         top_splits=experiment_results["top_splits"],
     )
 
+# Demo
+@app.route("/demo")
+def demo():
+    model_results, best_model = load_model_results()
+
+    return render_template(
+        "demo.html",
+        model_results=model_results,
+        best_model=best_model
+    )
+
+# Real-Time Inference API
+# Allows the Demo page to test v7, v8, or v9.
+# This does NOT change which model is marked as Production.
+@app.route("/predict", methods=["POST"])
+def predict():
+    try:
+        data = request.get_json() or {}
+
+        # Model version selected on the Demo page
+        selected_version = data.pop("model_version", None)
+
+        if selected_version is not None:
+            selected_version = int(selected_version)
+
+        # Only allow the three final registered models
+        if selected_version not in [7, 8, 9]:
+            return jsonify({
+                "error": "Please select model version v7, v8, or v9."
+            }), 400
+
+        # Score the booking using the selected registered model.
+        # This does not promote/archive/change the model stage.
+        result = serve_prediction(
+            DEFAULT_MODEL_NAME,
+            [data],
+            version=selected_version,
+            log=True
+        )
+
+        prediction_result = result["results"][0]
+
+        prediction = int(
+            prediction_result["prediction"]
+        )
+
+        probability_canceled = prediction_result.get(
+            "probability"
+        )
+
+        if probability_canceled is None:
+            probability_canceled = (
+                1.0 if prediction == 1 else 0.0
+            )
+
+        # v8 is the current Production model
+        stage = (
+            "Production"
+            if int(result["version"]) == 8
+            else "Archived / Comparison"
+        )
+
+        return jsonify({
+            "prediction": prediction,
+
+            "status":
+                "Canceled"
+                if prediction == 1
+                else "Not Canceled",
+
+            "probability_canceled":
+                float(probability_canceled),
+
+            "probability_not_canceled":
+                float(1 - probability_canceled),
+
+            "model": result["model"],
+            "version": result["version"],
+            "algorithm": result["algorithm"],
+            "stage": stage,
+            "latency_ms": result["latency_ms"]
+        })
+
+    except Exception as e:
+        return jsonify({
+            "error": str(e)
+        }), 400
 
 # Monitoring
 @app.route("/monitoring")
@@ -381,7 +475,11 @@ Do not include text before or after the JSON.
             ]
         )
 
-        response_text = message.content[0].text.strip()
+        response_text = "".join(
+            block.text
+            for block in message.content
+            if getattr(block, "type", None) == "text"
+        ).strip()
 
         # Guard against accidental ```json fences
         if response_text.startswith("```"):

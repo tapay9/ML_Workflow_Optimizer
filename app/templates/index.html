@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>ML Workflow Optimizer</title>
+    <title>ModelPilot</title>
 
     <link rel="stylesheet"
           href="{{ url_for('static', filename='css/style.css') }}">
@@ -15,24 +15,23 @@
 
 <div class="dashboard-container">
 
-    <!-- Sidebar -->
-    <aside class="sidebar">
+<aside class="sidebar">
 
-        <div class="brand">
-            <div class="brand-icon">ML</div>
+    <div class="sidebar-brand">
+        <div class="brand-icon">MP</div>
 
-            <div>
-                <h2>ML Workflow</h2>
-                <span>Optimizer</span>
-            </div>
+        <div class="brand-text">
+            <h2>ModelPilot</h2>
+            <span>ML Workflow Optimizer</span>
         </div>
+    </div>
 
-        <nav class="sidebar-nav">
+    <nav class="sidebar-nav">
 
-            <a href="#" class="nav-item active">
-                <span>▦</span>
-                Dashboard
-            </a>
+        <a href="{{ url_for('home') }}" class="nav-item active">
+            <span>▦</span>
+            Dashboard
+        </a>
 
             <a href="{{ url_for('models') }}" class="nav-item">
                 <span>◈</span>
@@ -59,7 +58,13 @@
                 Deployment
             </a>
 
+            <a href="{{ url_for('demo') }}" class="nav-item">
+                <span>⚡</span>
+                Demo
+            </a>
+
         </nav>
+
 
         <div class="sidebar-footer">
             <span class="status-dot"></span>
@@ -97,6 +102,7 @@
         <!-- Overview Cards -->
         <section class="stats-grid">
 
+            <!-- Dataset Records -->
             <div class="stat-card">
 
                 <div class="stat-top">
@@ -114,6 +120,7 @@
             </div>
 
 
+            <!-- Dataset Columns -->
             <div class="stat-card">
 
                 <div class="stat-top">
@@ -131,6 +138,7 @@
             </div>
 
 
+            <!-- Final Models -->
             <div class="stat-card">
 
                 <div class="stat-top">
@@ -148,6 +156,7 @@
             </div>
 
 
+            <!-- Best Model -->
             <div class="stat-card featured">
 
                 <div class="stat-top">
@@ -194,6 +203,7 @@
                     </span>
 
                 </div>
+
 
                 <p class="panel-description">
                     Test accuracy results from the final

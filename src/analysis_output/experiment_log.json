@@ -1,0 +1,76 @@
+[
+    {
+        "experiment_id": 1,
+        "timestamp": "2026-10-19T17:55:51",
+        "model": "Logistic Regression",
+        "version": 7,
+        "hyperparameters": {
+            "max_iter": 1000,
+            "scaled": true
+        },
+        "metrics": {
+            "train_accuracy": 0.81,
+            "test_accuracy": 0.8118,
+            "macro_f1": 0.7883,
+            "roc_auc": 0.8883,
+            "cancellation_recall": 0.6457,
+            "train_test_gap": -0.0018
+        },
+        "metadata": {
+            "dataset": "hotel_bookings_cleaned.csv",
+            "target": "is_canceled",
+            "purpose": "final model evaluation",
+            "registry_stage": "archived"
+        }
+    },
+    {
+        "experiment_id": 2,
+        "timestamp": "2026-10-19T17:55:51",
+        "model": "Decision Tree",
+        "version": 8,
+        "hyperparameters": {
+            "max_depth": 12
+        },
+        "metrics": {
+            "train_accuracy": 0.8508,
+            "test_accuracy": 0.8322,
+            "macro_f1": 0.8176,
+            "roc_auc": 0.91,
+            "cancellation_recall": 0.741,
+            "train_test_gap": 0.0186
+        },
+        "metadata": {
+            "dataset": "hotel_bookings_cleaned.csv",
+            "target": "is_canceled",
+            "purpose": "final model evaluation",
+            "registry_stage": "production",
+            "selected_for_production": true
+        }
+    },
+    {
+        "experiment_id": 3,
+        "timestamp": "2026-10-19T17:55:51",
+        "model": "KNN",
+        "version": 9,
+        "hyperparameters": {
+            "n_neighbors": 41,
+            "weights": "distance",
+            "p": 1
+        },
+        "metrics": {
+            "train_accuracy": 1.0,
+            "test_accuracy": 0.8068,
+            "macro_f1": 0.7801,
+            "roc_auc": 0.8789,
+            "cancellation_recall": 0.6185,
+            "train_test_gap": 0.1932
+        },
+        "metadata": {
+            "dataset": "hotel_bookings_cleaned.csv",
+            "target": "is_canceled",
+            "purpose": "final model evaluation",
+            "registry_stage": "archived",
+            "generalization_note": "overfitting"
+        }
+    }
+]
