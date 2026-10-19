@@ -4,6 +4,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from anthropic import Anthropic
 import os
+import sys
 import json
 
 # Load environment variables from .env
@@ -14,6 +15,16 @@ app = Flask(__name__)
 # Project paths
 BASE_DIR = Path(__file__).resolve().parent.parent
 MODEL_RESULTS = BASE_DIR / "src" / "analysis_output" / "model_comparison.csv"
+
+# Make `src/` importable no matter how the app is launched
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
+
+# Model registry + deployment interface (SQLite)
+from deploy_routes import deploy_bp
+from src.model_registry import DEFAULT_MODEL_NAME, list_versions
+
+app.register_blueprint(deploy_bp)
 
 
 # Load model results
@@ -49,7 +60,8 @@ def models():
     return render_template(
         "models.html",
         model_results=model_results,
-        best_model=best_model
+        best_model=best_model,
+        registry_versions=list_versions(DEFAULT_MODEL_NAME)
     )
 
 

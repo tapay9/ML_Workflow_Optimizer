@@ -55,6 +55,11 @@
                 AI Insights
             </a>
 
+            <a href="{{ url_for('deploy.deploy_page') }}" class="nav-item">
+                <span>⇪</span>
+                Deployment
+            </a>
+
         </nav>
 
 
@@ -215,6 +220,68 @@
             </div>
 
             {% endfor %}
+
+        </section>
+
+
+        <!-- Model Registry -->
+        <section class="dashboard-panel" style="margin-top: 30px;">
+
+            <div class="panel-header">
+
+                <div>
+                    <p class="panel-label">MODEL REGISTRY</p>
+                    <h2>Saved Versions</h2>
+                </div>
+
+                <a href="{{ url_for('deploy.deploy_page') }}" class="panel-badge"
+                   style="text-decoration: none;">
+                    Open Deployment →
+                </a>
+
+            </div>
+
+            <p class="panel-description">
+                Trained models stored in the SQLite registry,
+                with their current deployment stage.
+            </p>
+
+            {% if registry_versions %}
+
+            <div class="experiment-table-wrapper">
+                <table class="experiment-table">
+                    <thead>
+                        <tr>
+                            <th>Version</th>
+                            <th>Algorithm</th>
+                            <th>Accuracy</th>
+                            <th>ROC-AUC</th>
+                            <th>Stage</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for v in registry_versions %}
+                        <tr>
+                            <td>v{{ v["version"] }}</td>
+                            <td class="experiment-model">{{ v["algorithm"] }}</td>
+                            <td>{{ "%.2f"|format((v["metrics"] or {}).get("test_acc", 0) * 100) }}%</td>
+                            <td>{{ "%.4f"|format((v["metrics"] or {}).get("roc_auc", 0)) }}</td>
+                            <td><span class="stage-pill {{ v['stage'] }}">{{ v["stage"] }}</span></td>
+                            <td>{{ v["created_at"].replace("T", " ").replace("Z", "") }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% else %}
+
+            <div class="model-warning">
+                No models registered yet. Run the training script to save versions.
+            </div>
+
+            {% endif %}
 
         </section>
 
