@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Demo - ML Workflow Optimizer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .demo-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group label { font-size: 0.85rem; font-weight: 600; color: #555; }
+        .form-group input, .form-group select { padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; }
+        .btn-predict { background-color: #2563eb; color: #fff; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%; }
+        .result-box { padding: 20px; border-radius: 8px; text-align: center; font-size: 1.2rem; font-weight: bold; }
+        .status-canceled { background-color: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
+        .status-not-canceled { background-color: #d1fae5; color: #059669; border: 1px solid #6ee7b7; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand"><div class="brand-icon">ML</div><div><h2>ML Workflow</h2><span>Optimizer</span></div></div>
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item"><span>▦</span> Dashboard</a>
+            <a href="{{ url_for('models') }}" class="nav-item"><span>◈</span> Models</a>
+            <a href="{{ url_for('experiments') }}" class="nav-item"><span>⌁</span> Experiments</a>
+            <a href="{{ url_for('monitoring') }}" class="nav-item"><span>◉</span> Monitoring</a>
+            <a href="{{ url_for('demo') }}" class="nav-item active"><span>⚡</span> Demo</a>
+            <a href="{{ url_for('ai_insights') }}" class="nav-item"><span>✦</span> AI Insights</a>
+
+        </nav>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="main-content">
+            <header class="dashboard-header">
+                <div>
+                    <p class="page-label">LIVE INFERENCE</p>
+                    <h1>Real-Time Prediction Demo</h1>
+                    <p class="subtitle">Decision Tree Model (Trained on 50% data, 90/10 Train/Test split)</p>
+                </div>
+            </header>
+
+            <div class="demo-grid">
+                <!-- Inputs Panel -->
+                <div class="dashboard-panel">
+                    <h2>Booking Parameters</h2>
+                    <form id="prediction-form">
+                        <div class="form-grid">
+                            <div class="form-group"><label>Lead Time (days)</label><input type="number" id="lead_time" value="7"></div>
+                            <div class="form-group"><label>Arrival Week</label><input type="number" id="arrival_date_week_number" value="1"></div>
+                            <div class="form-group"><label>Arrival Day of Month</label><input type="number" id="arrival_date_day_of_month" value="1"></div>
+                            <div class="form-group"><label>Weekend Nights</label><input type="number" id="stays_in_weekend_nights" value="1"></div>
+                            <div class="form-group"><label>Week Nights</label><input type="number" id="stays_in_week_nights" value="2"></div>
+                            <div class="form-group"><label>Adults</label><input type="number" id="adults" value="2"></div>
+                            <div class="form-group"><label>Children</label><input type="number" id="children" value="0"></div>
+                            <div class="form-group"><label>Babies</label><input type="number" id="babies" value="0"></div>
+                            <div class="form-group"><label>Repeated Guest</label>
+                                <select id="is_repeated_guest"><option value="0" selected>No</option><option value="1">Yes</option></select>
+                            </div>
+                            <div class="form-group"><label>Previous Cancellations</label><input type="number" id="previous_cancellations" value="0"></div>
+                            <div class="form-group"><label>Previous Bookings Not Canceled</label><input type="number" id="previous_bookings_not_canceled" value="0"></div>
+                            <div class="form-group"><label>Booking Changes</label><input type="number" id="booking_changes" value="0"></div>
+                            <div class="form-group"><label>Waiting List Days</label><input type="number" id="days_in_waiting_list" value="0"></div>
+                            <div class="form-group"><label>Average Daily Rate (ADR)</label><input type="number" step="0.01" id="adr" value="100"></div>
+                            <div class="form-group"><label>Car Parking Spaces</label><input type="number" id="required_car_parking_spaces" value="0"></div>
+                            <div class="form-group"><label>Special Requests</label><input type="number" id="total_of_special_requests" value="0"></div>
+                            <div class="form-group"><label>Meal</label><input type="text" id="meal" value="BB"></div>
+                            <div class="form-group"><label>Country</label><input type="text" id="country" value="PRT"></div>
+                            <div class="form-group"><label>Market Segment</label><input type="text" id="market_segment" value="Online TA"></div>
+                            <div class="form-group"><label>Distribution Channel</label><input type="text" id="distribution_channel" value="TA/TO"></div>
+                            <div class="form-group"><label>Reserved Room Type</label><input type="text" id="reserved_room_type" value="A"></div>
+                            <div class="form-group"><label>Deposit Type</label><input type="text" id="deposit_type" value="No Deposit"></div>
+                            <div class="form-group"><label>Customer Type</label><input type="text" id="customer_type" value="Transient"></div>
+                            <div class="form-group"><label>City</label><input type="text" id="city" value="Lisbon"></div>
+                            <div class="form-group"><label>Hotel Type</label><input type="text" id="hotel_type" value="City Hotel"></div>
+                        </div>
+                        <button type="button" class="btn-predict" onclick="runPrediction()">Run Prediction</button>
+                    </form>
+                </div>
+
+                <!-- Prediction Output Panel -->
+                <div class="dashboard-panel">
+                    <h2>Model Output</h2>
+                    <div id="result-container" style="margin-top: 20px;">
+                        <p style="color: #666; text-align: center;">Click "Run Prediction" to compute real-time inference.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function runPrediction() {
+            const fields = [
+                'lead_time', 'arrival_date_week_number', 'arrival_date_day_of_month',
+                'stays_in_weekend_nights', 'stays_in_week_nights', 'adults', 'children',
+                'babies', 'is_repeated_guest', 'previous_cancellations',
+                'previous_bookings_not_canceled', 'booking_changes', 'days_in_waiting_list',
+                'adr', 'required_car_parking_spaces', 'total_of_special_requests',
+                'meal', 'country', 'market_segment', 'distribution_channel',
+                'reserved_room_type', 'deposit_type', 'customer_type', 'city', 'hotel_type'
+            ];
+
+            const payload = {};
+            fields.forEach(f => {
+                payload[f] = document.getElementById(f).value;
+            });
+
+            const res = await fetch('/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            const container = document.getElementById('result-container');
+
+            if (data.error) {
+                container.innerHTML = `<div class="result-box status-canceled">Error: ${data.error}</div>`;
+                return;
+            }
+
+            const statusClass = data.prediction === 1 ? 'status-canceled' : 'status-not-canceled';
+            container.innerHTML = `
+                <div class="result-box ${statusClass}">
+                    Prediction: ${data.status}
+                </div>
+                <div style="margin-top: 15px; font-size: 0.95rem;">
+                    <p><strong>Probability Canceled:</strong> ${(data.probability_canceled * 100).toFixed(2)}%</p>
+                    <p><strong>Probability Not Canceled:</strong> ${(data.probability_not_canceled * 100).toFixed(2)}%</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

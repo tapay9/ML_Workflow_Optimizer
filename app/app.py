@@ -1,10 +1,11 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, jsonify
 import pandas as pd
 from pathlib import Path
 from dotenv import load_dotenv
 from anthropic import Anthropic
 import os
 import json
+import joblib
 
 # Load environment variables from .env
 load_dotenv()
@@ -14,6 +15,12 @@ app = Flask(__name__)
 # Project paths
 BASE_DIR = Path(__file__).resolve().parent.parent
 OUTPUT_DIR = BASE_DIR / "src" / "analysis_output"
+
+# Load Pre-trained Model & Feature Columns
+MODEL_PATH = OUTPUT_DIR / "dt_model_50_split.joblib"
+COLUMNS_PATH = OUTPUT_DIR / "model_columns.joblib"
+dt_model = joblib.load(MODEL_PATH) if MODEL_PATH.exists() else None
+model_columns = joblib.load(COLUMNS_PATH) if COLUMNS_PATH.exists() else []
 
 MODEL_RESULTS = OUTPUT_DIR / "model_comparison.csv"
 
@@ -145,6 +152,80 @@ def experiments():
         fraction_curves=experiment_results["fraction_curves"],
         top_splits=experiment_results["top_splits"],
     )
+
+# Demo Page
+@app.route("/demo")
+def demo():
+    model_results, best_model = load_model_results()
+    return render_template("demo.html", model_results=model_results, best_model=best_model)
+
+# Real-Time Inference API
+@app.route("/predict", methods=["POST"])
+def predict():
+    if not dt_model or not model_columns:
+        return jsonify({"error": "Model not loaded properly."}), 500
+
+    try:
+        data = request.json
+
+        # 1. Construct raw input dataframe matching categorical encoding setup
+        raw_input = {
+            "lead_time": int(data.get("lead_time", 7)),
+            "arrival_date_week_number": int(data.get("arrival_date_week_number", 1)),
+            "arrival_date_day_of_month": int(data.get("arrival_date_day_of_month", 1)),
+            "stays_in_weekend_nights": int(data.get("stays_in_weekend_nights", 1)),
+            "stays_in_week_nights": int(data.get("stays_in_week_nights", 2)),
+            "adults": int(data.get("adults", 2)),
+            "children": float(data.get("children", 0)),
+            "babies": int(data.get("babies", 0)),
+            "is_repeated_guest": int(data.get("is_repeated_guest", 0)),
+            "previous_cancellations": int(data.get("previous_cancellations", 0)),
+            "previous_bookings_not_canceled": int(data.get("previous_bookings_not_canceled", 0)),
+            "booking_changes": int(data.get("booking_changes", 0)),
+            "days_in_waiting_list": int(data.get("days_in_waiting_list", 0)),
+            "adr": float(data.get("adr", 100.0)),
+            "required_car_parking_spaces": int(data.get("required_car_parking_spaces", 0)),
+            "total_of_special_requests": int(data.get("total_of_special_requests", 0)),
+            "meal": data.get("meal", "BB"),
+            "country": data.get("country", "PRT"),
+            "market_segment": data.get("market_segment", "Online TA"),
+            "distribution_channel": data.get("distribution_channel", "TA/TO"),
+            "reserved_room_type": data.get("reserved_room_type", "A"),
+            "deposit_type": data.get("deposit_type", "No Deposit"),
+            "customer_type": data.get("customer_type", "Transient"),
+            "city": data.get("city", "Lisbon"),
+            "hotel_type": data.get("hotel_type", "City Hotel"),
+        }
+
+        # Engineered features
+        raw_input["total_guests"] = raw_input["adults"] + raw_input["children"] + raw_input["babies"]
+        raw_input["total_nights"] = raw_input["stays_in_weekend_nights"] + raw_input["stays_in_week_nights"]
+
+        df_single = pd.DataFrame([raw_input])
+
+        # Categorical One-Hot Encoding matching Jupyter Notebook
+        categorical_cols = [
+            'meal', 'country', 'market_segment', 'distribution_channel',
+            'reserved_room_type', 'deposit_type', 'customer_type', 'city', 'hotel_type'
+        ]
+        df_encoded = pd.get_dummies(df_single, columns=categorical_cols, drop_first=False)
+
+        # Align columns to match exact training feature set (filling missing dummy columns with 0)
+        df_processed = df_encoded.reindex(columns=model_columns, fill_value=0)
+
+        # Predict
+        prediction = int(dt_model.predict(df_processed)[0])
+        probabilities = dt_model.predict_proba(df_processed)[0]
+
+        return jsonify({
+            "prediction": prediction,
+            "status": "Canceled" if prediction == 1 else "Not Canceled",
+            "probability_canceled": float(probabilities[1]),
+            "probability_not_canceled": float(probabilities[0])
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 
 # Monitoring
