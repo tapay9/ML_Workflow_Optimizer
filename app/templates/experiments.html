@@ -9,6 +9,31 @@
 
     <link rel="stylesheet"
           href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .chart-card {
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(128, 128, 128, 0.25);
+        }
+
+        .chart-card h3 {
+            margin: 0 0 12px;
+            font-size: 1rem;
+        }
+
+        .chart-card canvas {
+            width: 100% !important;
+            height: 260px !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -49,7 +74,7 @@
                 Monitoring
             </a>
 
-            <a href="{{ url_for('ai_insights') }}   " class="nav-item">
+            <a href="{{ url_for('ai_insights') }}" class="nav-item">
                 <span>✦</span>
                 AI Insights
             </a>
@@ -82,11 +107,15 @@
 
             <div class="header-status">
                 <span class="status-dot"></span>
-                {{ model_results|length }} Experiments Complete
+                {{ model_results|length + default_vs_tuned|length }} Experiments Complete
             </div>
 
         </header>
 
+
+        {# Best tuned result (highest test accuracy among tuned runs) #}
+        {% set tuned_runs = default_vs_tuned|selectattr("param_set", "equalto", "tuned")|list %}
+        {% set best_tuned = (tuned_runs|sort(attribute="test_acc", reverse=true)|first) if tuned_runs else none %}
 
         <!-- Overview Cards -->
         <section class="stats-grid">
@@ -101,9 +130,9 @@
                     <span class="stat-icon">⌁</span>
                 </div>
 
-                <h2>{{ model_results|length }}</h2>
+                <h2>{{ model_results|length + default_vs_tuned|length }}</h2>
 
-                <p>Completed model runs</p>
+                <p>Baseline and tuning runs</p>
 
             </div>
 
@@ -112,7 +141,7 @@
 
                 <div class="stat-top">
                     <span class="stat-label">
-                        TOP ACCURACY
+                        BASELINE ACCURACY
                     </span>
 
                     <span class="stat-icon">↗</span>
@@ -133,15 +162,29 @@
 
                 <div class="stat-top">
                     <span class="stat-label">
-                        DATASET
+                        TUNED ACCURACY
                     </span>
 
-                    <span class="stat-icon">▦</span>
+                    <span class="stat-icon">⚙</span>
                 </div>
 
-                <h2>119,144</h2>
+                {% if best_tuned %}
 
-                <p>Cleaned booking records</p>
+                <h2>
+                    {{ "%.2f"|format(best_tuned["test_acc"] * 100) }}%
+                </h2>
+
+                <p>
+                    {{ best_tuned["model"] }}
+                </p>
+
+                {% else %}
+
+                <h2>—</h2>
+
+                <p>Run the notebook export cell</p>
+
+                {% endif %}
 
             </div>
 
@@ -158,7 +201,7 @@
 
                 <h2>Complete</h2>
 
-                <p>Baseline evaluation</p>
+                <p>Baseline + tuning</p>
 
             </div>
 
@@ -263,9 +306,331 @@
 
         </section>
 
+
+        {% if default_vs_tuned %}
+
+        <!-- Default vs Tuned -->
+        <section class="dashboard-panel experiments-panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <p class="panel-label">
+                        HYPERPARAMETER TUNING
+                    </p>
+
+                    <h2>
+                        Default vs Tuned (100% of Training Data)
+                    </h2>
+
+                </div>
+
+                <span class="panel-badge">
+                    {{ default_vs_tuned|length }} Runs
+                </span>
+
+            </div>
+
+
+            <p class="panel-description">
+                Each model trained with default and tuned hyperparameters on an
+                80/20 split. Averaged over 3 random seeds.
+            </p>
+
+
+            <div class="experiment-table-wrapper">
+
+                <table class="experiment-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>Model</th>
+                            <th>Parameters</th>
+                            <th>Train Acc</th>
+                            <th>Test Acc</th>
+                            <th>Test F1</th>
+                            <th>Gap</th>
+                            <th>Fit Time</th>
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for r in default_vs_tuned %}
+
+                        <tr>
+
+                            <td class="experiment-model">
+                                {{ r["model"] }}
+                            </td>
+
+                            <td>
+                                {{ r["param_set"]|title }}
+                            </td>
+
+                            <td>
+                                {{ "%.2f"|format(r["train_acc"] * 100) }}%
+                            </td>
+
+                            <td>
+                                {{ "%.2f"|format(r["test_acc"] * 100) }}%
+                            </td>
+
+                            <td>
+                                {{ "%.4f"|format(r["test_f1"]) }}
+                            </td>
+
+                            <td>
+                                {% if r["gap"] > 0.05 %}
+                                    <span class="model-warning">{{ "%.2f"|format(r["gap"] * 100) }}%</span>
+                                {% else %}
+                                    {{ "%.2f"|format(r["gap"] * 100) }}%
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {{ "%.2f"|format(r["fit_s"]) }}s
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+        {% endif %}
+
+
+        {% if fraction_curves %}
+
+        <!-- Training Size Curves -->
+        <section class="dashboard-panel experiments-panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <p class="panel-label">
+                        TRAINING SIZE EXPERIMENT
+                    </p>
+
+                    <h2>
+                        Accuracy vs Training Data Used
+                    </h2>
+
+                </div>
+
+                <span class="panel-badge">
+                    10% – 100%
+                </span>
+
+            </div>
+
+
+            <p class="panel-description">
+                Solid lines are test accuracy, dashed lines are train accuracy.
+                A widening gap between them indicates overfitting.
+            </p>
+
+
+            <div class="chart-grid">
+
+                {% for row in tuning %}
+
+                <div class="chart-card">
+                    <h3>{{ row["model"] }}</h3>
+                    <canvas data-model="{{ row['model'] }}"></canvas>
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </section>
+
+        {% endif %}
+
+
+        {% if top_splits %}
+
+        <!-- Split Experiment -->
+        <section class="dashboard-panel experiments-panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <p class="panel-label">
+                        TRAIN / TEST SPLIT EXPERIMENT
+                    </p>
+
+                    <h2>
+                        Top Combinations by Test Accuracy
+                    </h2>
+
+                </div>
+
+                <span class="panel-badge">
+                    Top {{ top_splits|length }}
+                </span>
+
+            </div>
+
+
+            <p class="panel-description">
+                Best results across train/test splits (90/10 to 50/50) and
+                training fractions, using tuned hyperparameters.
+            </p>
+
+
+            <div class="experiment-table-wrapper">
+
+                <table class="experiment-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>Model</th>
+                            <th>Split (Train/Test)</th>
+                            <th>Training Fraction</th>
+                            <th>Training Rows</th>
+                            <th>Test Acc</th>
+                            <th>Test F1</th>
+                            <th>Gap</th>
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for s in top_splits %}
+
+                        <tr>
+
+                            <td class="experiment-model">
+                                {{ s["model"] }}
+                            </td>
+
+                            <td>
+                                {{ "%d"|format(((1 - s["test_size"]) * 100)|round) }}/{{ "%d"|format((s["test_size"] * 100)|round) }}
+                            </td>
+
+                            <td>
+                                {{ "%d"|format((s["fraction"] * 100)|round) }}%
+                            </td>
+
+                            <td>
+                                {{ "{:,}".format(s["n_train"]|int) }}
+                            </td>
+
+                            <td>
+                                {{ "%.2f"|format(s["test_acc"] * 100) }}%
+                            </td>
+
+                            <td>
+                                {{ "%.4f"|format(s["test_f1"]) }}
+                            </td>
+
+                            <td>
+                                {{ "%.2f"|format(s["gap"] * 100) }}%
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+        {% endif %}
+
     </main>
 
 </div>
+
+
+{% if fraction_curves %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<script>
+    const curves = {{ fraction_curves | tojson }};
+
+    const COLORS = { default: "#8a8f98", tuned: "#4C72B0" };
+
+    document.querySelectorAll("canvas[data-model]").forEach(canvas => {
+        const model = canvas.dataset.model;
+        const datasets = [];
+        let labels = [];
+
+        ["default", "tuned"].forEach(pset => {
+            const c = curves[pset] && curves[pset][model];
+            if (!c) return;
+
+            labels = c.fractions.map(f => f + "%");
+
+            datasets.push({
+                label: pset + " test",
+                data: c.test_acc,
+                borderColor: COLORS[pset],
+                backgroundColor: COLORS[pset],
+                tension: 0.25
+            });
+
+            datasets.push({
+                label: pset + " train",
+                data: c.train_acc,
+                borderColor: COLORS[pset],
+                backgroundColor: COLORS[pset],
+                borderDash: [6, 4],
+                tension: 0.25
+            });
+        });
+
+        new Chart(canvas, {
+            type: "line",
+            data: { labels, datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        ticks: { callback: v => (v * 100).toFixed(0) + "%" }
+                    },
+                    x: {
+                        title: { display: true, text: "Share of training pool" }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => ctx.dataset.label + ": " +
+                                (ctx.parsed.y * 100).toFixed(2) + "%"
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+
+{% endif %}
 
 </body>
 

@@ -1,0 +1,7 @@
+model,param_set,train_acc,test_acc,test_f1,fit_s,gap
+Decision Tree,default,1.0,0.8174,0.7544,1.2001,0.1826
+Decision Tree,tuned,0.8475,0.8386,0.7716,0.896,0.0089
+K-Nearest Neighbors,default,0.8553,0.7804,0.6913,0.1144,0.0749
+K-Nearest Neighbors,tuned,1.0,0.8094,0.7097,0.1007,0.1906
+Logistic Regression,default,0.8155,0.8106,0.7152,0.8857,0.0049
+Logistic Regression,tuned,0.8153,0.8108,0.7154,0.8927,0.0045

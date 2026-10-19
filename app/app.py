@@ -13,10 +13,18 @@ app = Flask(__name__)
 
 # Project paths
 BASE_DIR = Path(__file__).resolve().parent.parent
-MODEL_RESULTS = BASE_DIR / "src" / "analysis_output" / "model_comparison.csv"
+OUTPUT_DIR = BASE_DIR / "src" / "analysis_output"
+
+MODEL_RESULTS = OUTPUT_DIR / "model_comparison.csv"
+
+# Files produced by the export cell in model_experimentation.ipynb
+TUNING_RESULTS = OUTPUT_DIR / "tuning_results.csv"
+DEFAULT_VS_TUNED = OUTPUT_DIR / "default_vs_tuned.csv"
+FRACTION_RESULTS = OUTPUT_DIR / "fraction_results.csv"
+SPLIT_RESULTS = OUTPUT_DIR / "split_results.csv"
 
 
-# Load model results
+# Load model results (baseline comparison)
 def load_model_results():
     results_df = pd.read_csv(MODEL_RESULTS)
 
@@ -29,15 +37,81 @@ def load_model_results():
     return model_results, best_model
 
 
+def _read_csv_or_none(path):
+    """Return a DataFrame, or None if the experiment file hasn't been exported yet."""
+    if not path.exists():
+        print(f"Missing experiment file: {path.name}")
+        return None
+    return pd.read_csv(path)
+
+
+# Load experiment results (tuning, training-size curves, split study)
+def load_experiment_results():
+    tuning_df = _read_csv_or_none(TUNING_RESULTS)
+    compare_df = _read_csv_or_none(DEFAULT_VS_TUNED)
+    fraction_df = _read_csv_or_none(FRACTION_RESULTS)
+    split_df = _read_csv_or_none(SPLIT_RESULTS)
+
+    tuning = []
+    if tuning_df is not None:
+        tuning = tuning_df.to_dict(orient="records")
+        for row in tuning:
+            row["best_params"] = json.loads(row["best_params"])
+
+    default_vs_tuned = (
+        compare_df.to_dict(orient="records") if compare_df is not None else []
+    )
+
+    # Shape for charting: fraction_curves[param_set][model] = {fractions, train, test}
+    fraction_curves = {}
+    if fraction_df is not None:
+        for (pset, model), grp in fraction_df.groupby(["param_set", "model"]):
+            grp = grp.sort_values("fraction")
+            fraction_curves.setdefault(pset, {})[model] = {
+                "fractions": (grp["fraction"] * 100).round().astype(int).tolist(),
+                "train_acc": grp["train_acc_mean"].tolist(),
+                "test_acc": grp["test_acc_mean"].tolist(),
+            }
+
+    # Best (model, split, fraction) combinations by test accuracy
+    top_splits = []
+    if split_df is not None:
+        top_splits = (
+            split_df.sort_values("test_acc", ascending=False)
+            .head(10)
+            .to_dict(orient="records")
+        )
+
+    return {
+        "tuning": tuning,
+        "default_vs_tuned": default_vs_tuned,
+        "fraction_curves": fraction_curves,
+        "top_splits": top_splits,
+    }
+
+
+# Best tuned model (by test accuracy at 100% of training data)
+def get_best_tuned_model(experiment_results):
+    tuned = [
+        r for r in experiment_results["default_vs_tuned"]
+        if r["param_set"] == "tuned"
+    ]
+    if not tuned:
+        return None
+    return max(tuned, key=lambda r: r["test_acc"])
+
+
 # Dashboard
 @app.route("/")
 def home():
     model_results, best_model = load_model_results()
+    experiment_results = load_experiment_results()
 
     return render_template(
         "index.html",
         model_results=model_results,
-        best_model=best_model
+        best_model=best_model,
+        best_tuned_model=get_best_tuned_model(experiment_results),
     )
 
 
@@ -45,11 +119,14 @@ def home():
 @app.route("/models")
 def models():
     model_results, best_model = load_model_results()
+    experiment_results = load_experiment_results()
 
     return render_template(
         "models.html",
         model_results=model_results,
-        best_model=best_model
+        best_model=best_model,
+        tuning=experiment_results["tuning"],
+        default_vs_tuned=experiment_results["default_vs_tuned"],
     )
 
 
@@ -57,11 +134,16 @@ def models():
 @app.route("/experiments")
 def experiments():
     model_results, best_model = load_model_results()
+    experiment_results = load_experiment_results()
 
     return render_template(
         "experiments.html",
         model_results=model_results,
-        best_model=best_model
+        best_model=best_model,
+        tuning=experiment_results["tuning"],
+        default_vs_tuned=experiment_results["default_vs_tuned"],
+        fraction_curves=experiment_results["fraction_curves"],
+        top_splits=experiment_results["top_splits"],
     )
 
 
@@ -81,6 +163,7 @@ def monitoring():
 @app.route("/ai-insights")
 def ai_insights():
     model_results, best_model = load_model_results()
+    experiment_results = load_experiment_results()
 
     performance_insights = None
     optimization_suggestions = None
@@ -98,9 +181,24 @@ You are the AI assistant inside an ML Workflow Optimizer.
 The machine learning task predicts whether a hotel booking
 will be canceled.
 
-Here are the current model results:
+Here are the baseline model results:
 
 {model_results}
+
+Here are the hyperparameter tuning results (grid search with
+cross-validation, best parameters per model):
+
+{experiment_results["tuning"]}
+
+Here is a comparison of default vs tuned hyperparameters on the
+held-out test set, with train-test gap (higher gap = more overfitting):
+
+{experiment_results["default_vs_tuned"]}
+
+Here are the best combinations from the train/test split and
+training-set-size experiments:
+
+{experiment_results["top_splits"]}
 
 Analyze the results and return ONLY valid JSON.
 
@@ -132,16 +230,17 @@ Requirements:
 
 Each value should be 1-2 short sentences.
 
-Performance should explain the strongest model performance.
+Performance should explain the strongest model performance,
+including any gain from hyperparameter tuning.
 
 Generalization should identify whether any model appears
-to be overfitting or generalizing well.
+to be overfitting or generalizing well, using the train-test gap.
 
 Classification should discuss useful classification metrics
-such as ROC-AUC, precision, recall, or F1.
+such as F1, precision, or recall.
 
-Optimization should explain what area could benefit from
-hyperparameter tuning.
+Optimization should explain what tuning changed and what
+area could still benefit from further tuning.
 
 Best model should recommend the strongest overall model,
 considering more than accuracy alone.
@@ -149,7 +248,7 @@ considering more than accuracy alone.
 Overfitting should explain which model needs attention.
 
 Performance tradeoff should explain an important tradeoff
-between the models.
+between the models, such as accuracy, F1, or fit time.
 
 Next experiment should recommend one useful next experiment
 or tuning step.
@@ -175,7 +274,7 @@ before deployment.
 
 Do not claim that a model is already deployed.
 
-Base every insight only on the model results provided.
+Base every insight only on the results provided.
 
 Do not use Markdown.
 
@@ -194,6 +293,11 @@ Do not include text before or after the JSON.
         )
 
         response_text = message.content[0].text.strip()
+
+        # Guard against accidental ```json fences
+        if response_text.startswith("```"):
+            response_text = response_text.strip("`")
+            response_text = response_text.removeprefix("json").strip()
 
         ai_data = json.loads(response_text)
 

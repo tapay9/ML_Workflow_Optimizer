@@ -87,7 +87,7 @@
 
             <div class="header-status">
                 <span class="status-dot"></span>
-                3 Models Trained
+                {{ model_results|length }} Models Trained
             </div>
 
         </header>
@@ -217,6 +217,123 @@
             {% endfor %}
 
         </section>
+
+
+        {% if tuning %}
+
+        <!-- Hyperparameter Tuning -->
+        <section class="dashboard-panel experiments-panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <p class="panel-label">
+                        HYPERPARAMETER TUNING
+                    </p>
+
+                    <h2>
+                        Default vs Tuned Models
+                    </h2>
+
+                </div>
+
+                <span class="panel-badge">
+                    Grid Search + {{ tuning[0]["scoring"]|title }} CV
+                </span>
+
+            </div>
+
+
+            <p class="panel-description">
+                Best parameters found by cross-validated grid search on the
+                training data only. Test results use the held-out 20% split.
+            </p>
+
+
+            <div class="experiment-table-wrapper">
+
+                <table class="experiment-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>Model</th>
+                            <th>Best Parameters</th>
+                            <th>CV Score</th>
+                            <th>Default Test Acc</th>
+                            <th>Tuned Test Acc</th>
+                            <th>Tuned F1</th>
+                            <th>Default Gap</th>
+                            <th>Tuned Gap</th>
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for row in tuning %}
+
+                        {% set d = default_vs_tuned
+                            |selectattr("model", "equalto", row["model"])
+                            |selectattr("param_set", "equalto", "default")
+                            |first %}
+
+                        {% set t = default_vs_tuned
+                            |selectattr("model", "equalto", row["model"])
+                            |selectattr("param_set", "equalto", "tuned")
+                            |first %}
+
+                        <tr>
+
+                            <td class="experiment-model">
+                                {{ row["model"] }}
+                            </td>
+
+                            <td>
+                                {% for key, value in row["best_params"].items() %}
+                                    {{ key }}={{ value }}{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            </td>
+
+                            <td>
+                                {{ "%.2f"|format(row["cv_test_score"] * 100) }}%
+                            </td>
+
+                            <td>
+                                {% if d %}{{ "%.2f"|format(d["test_acc"] * 100) }}%{% else %}—{% endif %}
+                            </td>
+
+                            <td>
+                                {% if t %}{{ "%.2f"|format(t["test_acc"] * 100) }}%{% else %}—{% endif %}
+                            </td>
+
+                            <td>
+                                {% if t %}{{ "%.4f"|format(t["test_f1"]) }}{% else %}—{% endif %}
+                            </td>
+
+                            <td>
+                                {% if d %}{{ "%.2f"|format(d["gap"] * 100) }}%{% else %}—{% endif %}
+                            </td>
+
+                            <td>
+                                {% if t %}{{ "%.2f"|format(t["gap"] * 100) }}%{% else %}—{% endif %}
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+        {% endif %}
 
     </main>
 

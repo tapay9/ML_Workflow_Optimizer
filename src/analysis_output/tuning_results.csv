@@ -1,0 +1,4 @@
+model,scoring,cv_train_score,cv_test_score,cv_std,best_params
+Logistic Regression,accuracy,0.8098,0.8055,0.0009,"{""C"": 10, ""class_weight"": null}"
+Decision Tree,accuracy,0.8533,0.8207,0.0016,"{""criterion"": ""gini"", ""max_depth"": 12, ""min_samples_leaf"": 5}"
+K-Nearest Neighbors,accuracy,1.0,0.7964,0.0059,"{""n_neighbors"": 41, ""p"": 1, ""weights"": ""distance""}"
