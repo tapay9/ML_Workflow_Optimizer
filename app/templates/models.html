@@ -15,7 +15,7 @@
 
 <div class="dashboard-container">
 
-    <!-- Sidebar -->
+    <!-- SIDEBAR -->
     <aside class="sidebar">
 
         <div class="brand">
@@ -26,7 +26,6 @@
                 <span>Optimizer</span>
             </div>
         </div>
-
 
         <nav class="sidebar-nav">
 
@@ -55,8 +54,12 @@
                 AI Insights
             </a>
 
-        </nav>
+            <a href="{{ url_for('deploy.deploy_page') }}" class="nav-item">
+                <span>⇪</span>
+                Deployment
+            </a>
 
+        </nav>
 
         <div class="sidebar-footer">
             <span class="status-dot"></span>
@@ -66,10 +69,10 @@
     </aside>
 
 
-    <!-- Main Content -->
+    <!-- MAIN CONTENT -->
     <main class="main-content">
 
-        <!-- Header -->
+        <!-- PAGE HEADER -->
         <header class="dashboard-header">
 
             <div>
@@ -80,20 +83,20 @@
                 <h1>Models</h1>
 
                 <p class="subtitle">
-                    Compare trained machine learning models
+                    Compare the final trained machine learning models
                     and evaluate their performance.
                 </p>
             </div>
 
             <div class="header-status">
                 <span class="status-dot"></span>
-                {{ model_results|length }} Models Trained
+                3 Final Models
             </div>
 
         </header>
 
 
-        <!-- Model Cards -->
+        <!-- FINAL MODEL CARDS -->
         <section class="models-page-grid">
 
             {% for result in model_results %}
@@ -104,7 +107,7 @@
 
                     <div>
                         <p class="panel-label">
-                            TRAINED MODEL
+                            FINAL MODEL
                         </p>
 
                         <h2>
@@ -112,13 +115,10 @@
                         </h2>
                     </div>
 
-
-                    {% if result["model"] == best_model["model"] %}
-
+                    {% if result["model"] == "Decision Tree" %}
                     <span class="panel-badge">
-                        Best Accuracy
+                        Production · v8
                     </span>
-
                     {% endif %}
 
                 </div>
@@ -164,37 +164,30 @@
                 </div>
 
 
-                <!-- Overfitting Information -->
                 <div class="model-status">
-
                     <span>Train Accuracy</span>
 
                     <strong>
                         {{ "%.2f"|format(result["train_acc"] * 100) }}%
                     </strong>
-
                 </div>
 
 
                 <div class="model-status">
-
                     <span>Test Accuracy</span>
 
                     <strong>
                         {{ "%.2f"|format(result["test_acc"] * 100) }}%
                     </strong>
-
                 </div>
 
 
                 <div class="model-status">
-
                     <span>Train-Test Gap</span>
 
                     <strong>
                         {{ "%.2f"|format(result["overfit_gap"] * 100) }}%
                     </strong>
-
                 </div>
 
 
@@ -219,35 +212,32 @@
         </section>
 
 
-        {% if tuning %}
-
-        <!-- Hyperparameter Tuning -->
+        <!-- FINAL MODEL CONFIGURATIONS -->
         <section class="dashboard-panel experiments-panel">
 
             <div class="panel-header">
 
                 <div>
-
                     <p class="panel-label">
-                        HYPERPARAMETER TUNING
+                        MODEL CONFIGURATION
                     </p>
 
                     <h2>
-                        Default vs Tuned Models
+                        Final Model Configurations
                     </h2>
-
                 </div>
 
                 <span class="panel-badge">
-                    Grid Search + {{ tuning[0]["scoring"]|title }} CV
+                    v7 · v8 · v9
                 </span>
 
             </div>
 
 
             <p class="panel-description">
-                Best parameters found by cross-validated grid search on the
-                training data only. Test results use the held-out 20% split.
+                Final configurations used to evaluate the three candidate models.
+                The Decision Tree was selected for production based on its
+                predictive performance and small train-test gap.
             </p>
 
 
@@ -256,74 +246,92 @@
                 <table class="experiment-table">
 
                     <thead>
-
                         <tr>
+                            <th>Version</th>
                             <th>Model</th>
-                            <th>Best Parameters</th>
-                            <th>CV Score</th>
-                            <th>Default Test Acc</th>
-                            <th>Tuned Test Acc</th>
-                            <th>Tuned F1</th>
-                            <th>Default Gap</th>
-                            <th>Tuned Gap</th>
+                            <th>Configuration</th>
+                            <th>Train Accuracy</th>
+                            <th>Test Accuracy</th>
+                            <th>ROC-AUC</th>
+                            <th>Gap</th>
+                            <th>Assessment</th>
                         </tr>
-
                     </thead>
-
 
                     <tbody>
 
-                        {% for row in tuning %}
-
-                        {% set d = default_vs_tuned
-                            |selectattr("model", "equalto", row["model"])
-                            |selectattr("param_set", "equalto", "default")
-                            |first %}
-
-                        {% set t = default_vs_tuned
-                            |selectattr("model", "equalto", row["model"])
-                            |selectattr("param_set", "equalto", "tuned")
-                            |first %}
-
                         <tr>
+                            <td><strong>v7</strong></td>
 
                             <td class="experiment-model">
-                                {{ row["model"] }}
+                                Logistic Regression
                             </td>
 
                             <td>
-                                {% for key, value in row["best_params"].items() %}
-                                    {{ key }}={{ value }}{% if not loop.last %}, {% endif %}
-                                {% endfor %}
+                                Scaled · max_iter=1000
                             </td>
+
+                            <td>81.00%</td>
+                            <td>81.18%</td>
+                            <td>0.8883</td>
+                            <td>-0.18%</td>
 
                             <td>
-                                {{ "%.2f"|format(row["cv_test_score"] * 100) }}%
+                                <span class="stage-pill archived">
+                                    Stable
+                                </span>
                             </td>
-
-                            <td>
-                                {% if d %}{{ "%.2f"|format(d["test_acc"] * 100) }}%{% else %}—{% endif %}
-                            </td>
-
-                            <td>
-                                {% if t %}{{ "%.2f"|format(t["test_acc"] * 100) }}%{% else %}—{% endif %}
-                            </td>
-
-                            <td>
-                                {% if t %}{{ "%.4f"|format(t["test_f1"]) }}{% else %}—{% endif %}
-                            </td>
-
-                            <td>
-                                {% if d %}{{ "%.2f"|format(d["gap"] * 100) }}%{% else %}—{% endif %}
-                            </td>
-
-                            <td>
-                                {% if t %}{{ "%.2f"|format(t["gap"] * 100) }}%{% else %}—{% endif %}
-                            </td>
-
                         </tr>
 
-                        {% endfor %}
+
+                        <tr>
+                            <td><strong>v8</strong></td>
+
+                            <td class="experiment-model">
+                                Decision Tree
+                            </td>
+
+                            <td>
+                                max_depth=12
+                            </td>
+
+                            <td>85.08%</td>
+                            <td>83.22%</td>
+                            <td>0.9100</td>
+                            <td>1.86%</td>
+
+                            <td>
+                                <span class="stage-pill production">
+                                    Best Overall
+                                </span>
+                            </td>
+                        </tr>
+
+
+                        <tr>
+                            <td><strong>v9</strong></td>
+
+                            <td class="experiment-model">
+                                KNN
+                            </td>
+
+                            <td>
+                                k=41 · distance · p=1
+                            </td>
+
+                            <td>100.00%</td>
+                            <td>80.68%</td>
+                            <td>0.8789</td>
+                            <td>19.32%</td>
+
+                            <td>
+                                <span class="stage-pill"
+                                      style="color:#fbbf24;
+                                             border-color:#92400e;">
+                                    Overfitting
+                                </span>
+                            </td>
+                        </tr>
 
                     </tbody>
 
@@ -333,12 +341,233 @@
 
         </section>
 
-        {% endif %}
+
+        <!-- MODEL SELECTION -->
+        <section class="dashboard-panel experiments-panel">
+
+            <div class="panel-header">
+
+                <div>
+                    <p class="panel-label">
+                        MODEL SELECTION
+                    </p>
+
+                    <h2>
+                        Production Decision
+                    </h2>
+                </div>
+
+                <span class="panel-badge">
+                    Selected · v8
+                </span>
+
+            </div>
+
+
+            <p class="panel-description">
+                Performance and generalization were reviewed together
+                before selecting the production model.
+            </p>
+
+
+            <div class="experiment-table-wrapper">
+
+                <table class="experiment-table">
+
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Version</th>
+                            <th>Accuracy</th>
+                            <th>Macro-F1</th>
+                            <th>ROC-AUC</th>
+                            <th>Gap</th>
+                            <th>Conclusion</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        <tr>
+                            <td class="experiment-model">
+                                Logistic Regression
+                            </td>
+
+                            <td>v7</td>
+                            <td>81.18%</td>
+                            <td>0.7883</td>
+                            <td>0.8883</td>
+                            <td>-0.18%</td>
+
+                            <td>
+                                Stable generalization, but lower predictive
+                                performance than v8.
+                            </td>
+                        </tr>
+
+
+                        <tr>
+                            <td class="experiment-model">
+                                Decision Tree
+                            </td>
+
+                            <td><strong>v8</strong></td>
+                            <td><strong>83.22%</strong></td>
+                            <td><strong>0.8176</strong></td>
+                            <td><strong>0.9100</strong></td>
+                            <td><strong>1.86%</strong></td>
+
+                            <td>
+                                <strong>
+                                    Selected for production — strongest overall
+                                    performance with a small train-test gap.
+                                </strong>
+                            </td>
+                        </tr>
+
+
+                        <tr>
+                            <td class="experiment-model">
+                                KNN
+                            </td>
+
+                            <td>v9</td>
+                            <td>80.68%</td>
+                            <td>0.7801</td>
+                            <td>0.8789</td>
+                            <td>19.32%</td>
+
+                            <td>
+                                High training fit but poor generalization;
+                                not selected because of overfitting.
+                            </td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <!-- FINAL MODEL REGISTRY -->
+        <section class="dashboard-panel model-registry-panel">
+
+            <div class="panel-header">
+
+                <div>
+                    <p class="panel-label">
+                        MODEL REGISTRY
+                    </p>
+
+                    <h2>
+                        Final Registered Versions
+                    </h2>
+                </div>
+
+
+                <a href="{{ url_for('deploy.deploy_page') }}"
+                   class="panel-badge"
+                   style="text-decoration: none;">
+                    Open Deployment →
+                </a>
+
+            </div>
+
+
+            <p class="panel-description">
+                Final trained models stored in the SQLite registry.
+                v8 is the selected production model.
+            </p>
+
+
+            <div class="experiment-table-wrapper">
+
+                <table class="experiment-table">
+
+                    <thead>
+                        <tr>
+                            <th>Version</th>
+                            <th>Algorithm</th>
+                            <th>Accuracy</th>
+                            <th>Macro-F1</th>
+                            <th>ROC-AUC</th>
+                            <th>Stage</th>
+                        </tr>
+                    </thead>
+
+
+                    <tbody>
+
+                        <tr>
+                            <td><strong>v7</strong></td>
+
+                            <td class="experiment-model">
+                                LogisticRegression
+                            </td>
+
+                            <td>81.18%</td>
+                            <td>0.7883</td>
+                            <td>0.8883</td>
+
+                            <td>
+                                <span class="stage-pill archived">
+                                    archived
+                                </span>
+                            </td>
+                        </tr>
+
+
+                        <tr>
+                            <td><strong>v8</strong></td>
+
+                            <td class="experiment-model">
+                                DecisionTreeClassifier
+                            </td>
+
+                            <td>83.22%</td>
+                            <td>0.8176</td>
+                            <td>0.9100</td>
+
+                            <td>
+                                <span class="stage-pill production">
+                                    production
+                                </span>
+                            </td>
+                        </tr>
+
+
+                        <tr>
+                            <td><strong>v9</strong></td>
+
+                            <td class="experiment-model">
+                                KNeighborsClassifier
+                            </td>
+
+                            <td>80.68%</td>
+                            <td>0.7801</td>
+                            <td>0.8789</td>
+
+                            <td>
+                                <span class="stage-pill archived">
+                                    archived
+                                </span>
+                            </td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
 
     </main>
 
 </div>
 
 </body>
-
 </html>

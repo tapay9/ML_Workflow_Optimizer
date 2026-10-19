@@ -4,6 +4,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from anthropic import Anthropic
 import os
+import sys
 import json
 
 # Load environment variables from .env
@@ -22,6 +23,17 @@ TUNING_RESULTS = OUTPUT_DIR / "tuning_results.csv"
 DEFAULT_VS_TUNED = OUTPUT_DIR / "default_vs_tuned.csv"
 FRACTION_RESULTS = OUTPUT_DIR / "fraction_results.csv"
 SPLIT_RESULTS = OUTPUT_DIR / "split_results.csv"
+
+# Make `src/` importable no matter how the app is launched
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
+
+# Model registry + deployment interface (SQLite)
+from deploy_routes import deploy_bp
+from src.model_registry import DEFAULT_MODEL_NAME, list_versions
+from src.serving import prediction_stats
+
+app.register_blueprint(deploy_bp)
 
 
 # Load model results (baseline comparison)
@@ -127,6 +139,7 @@ def models():
         best_model=best_model,
         tuning=experiment_results["tuning"],
         default_vs_tuned=experiment_results["default_vs_tuned"],
+        registry_versions=list_versions(DEFAULT_MODEL_NAME)
     )
 
 
@@ -152,23 +165,76 @@ def experiments():
 def monitoring():
     model_results, best_model = load_model_results()
 
+    live_stats = prediction_stats(DEFAULT_MODEL_NAME)
+
     return render_template(
         "monitoring.html",
         model_results=model_results,
-        best_model=best_model
+        best_model=best_model,
+        live_stats=live_stats
     )
+
+@app.route("/api/monitoring/stats")
+def monitoring_stats():
+    live_stats = prediction_stats(DEFAULT_MODEL_NAME)
+
+    total_predictions = sum(stat["n"] for stat in live_stats)
+
+    return {
+        "total_predictions": total_predictions,
+        "versions_with_activity": len(live_stats),
+        "stats": live_stats
+    }
 
 
 # AI Insights
 @app.route("/ai-insights")
 def ai_insights():
     model_results, best_model = load_model_results()
-    experiment_results = load_experiment_results()
 
     performance_insights = None
     optimization_suggestions = None
     deployment_readiness = None
     ai_error = None
+
+    # Final registered model versions used throughout the application.
+    final_models = {
+        "v7": {
+            "model": "Logistic Regression",
+            "train_accuracy": 0.8100,
+            "test_accuracy": 0.8118,
+            "macro_f1": 0.7883,
+            "roc_auc": 0.8883,
+            "cancellation_recall": 0.6457,
+            "train_test_gap": -0.0018,
+            "stage": "archived"
+        },
+
+        "v8": {
+            "model": "Decision Tree",
+            "configuration": {
+                "max_depth": 12
+            },
+            "train_accuracy": 0.8508,
+            "test_accuracy": 0.8322,
+            "macro_f1": 0.8176,
+            "roc_auc": 0.9100,
+            "cancellation_recall": 0.7410,
+            "train_test_gap": 0.0186,
+            "stage": "production"
+        },
+
+        "v9": {
+            "model": "KNN",
+            "train_accuracy": 1.0000,
+            "test_accuracy": 0.8068,
+            "macro_f1": 0.7801,
+            "roc_auc": 0.8789,
+            "cancellation_recall": 0.6185,
+            "train_test_gap": 0.1932,
+            "stage": "archived"
+        }
+    }
 
     try:
         client = Anthropic(
@@ -181,26 +247,35 @@ You are the AI assistant inside an ML Workflow Optimizer.
 The machine learning task predicts whether a hotel booking
 will be canceled.
 
-Here are the baseline model results:
+The application has completed its final model evaluation.
 
-{model_results}
+ONLY analyze the following final model versions:
 
-Here are the hyperparameter tuning results (grid search with
-cross-validation, best parameters per model):
+{json.dumps(final_models, indent=2)}
 
-{experiment_results["tuning"]}
+Important context:
 
-Here is a comparison of default vs tuned hyperparameters on the
-held-out test set, with train-test gap (higher gap = more overfitting):
+v7 is the final Logistic Regression model.
 
-{experiment_results["default_vs_tuned"]}
+v8 is the final Decision Tree model and is currently deployed
+to production. It uses max_depth=12.
 
-Here are the best combinations from the train/test split and
-training-set-size experiments:
+v9 is the final KNN model.
 
-{experiment_results["top_splits"]}
+The Decision Tree v8 was selected for production because it
+has the strongest overall final evaluation results.
 
-Analyze the results and return ONLY valid JSON.
+The KNN v9 has a large train-test gap and shows substantial
+overfitting.
+
+Do NOT use or refer to earlier model versions, previous grid-search
+results, previous default-vs-tuned results, or earlier experimental
+accuracy values.
+
+Do NOT claim that v8 still needs to be deployed.
+It is already the current production model.
+
+Analyze the final models and return ONLY valid JSON.
 
 Use exactly this structure:
 
@@ -218,7 +293,7 @@ Use exactly this structure:
         "next_experiment": "short recommendation"
     }},
     "deployment_readiness": {{
-        "recommended_model": "model name",
+        "recommended_model": "model name and version",
         "status": "Ready, Needs Improvement, or Not Ready",
         "reason": "short explanation",
         "risk": "short explanation",
@@ -230,51 +305,65 @@ Requirements:
 
 Each value should be 1-2 short sentences.
 
-Performance should explain the strongest model performance,
-including any gain from hyperparameter tuning.
+Performance:
+Compare the final performance of v7, v8, and v9 using
+test accuracy, Macro-F1, and ROC-AUC.
 
-Generalization should identify whether any model appears
-to be overfitting or generalizing well, using the train-test gap.
+Generalization:
+Discuss the train-test gaps. Explain that v7 and v8
+generalize well and that v9 shows substantial overfitting.
 
-Classification should discuss useful classification metrics
-such as F1, precision, or recall.
+Classification:
+Compare cancellation recall and Macro-F1 across the final models.
 
-Optimization should explain what tuning changed and what
-area could still benefit from further tuning.
+Optimization:
+Discuss opportunities for improving the final models.
+Do not refer to old tuning results.
 
-Best model should recommend the strongest overall model,
-considering more than accuracy alone.
+Best model:
+Identify Decision Tree v8 as the strongest overall final model
+based on accuracy, Macro-F1, ROC-AUC, and generalization.
 
-Overfitting should explain which model needs attention.
+Overfitting:
+Identify KNN v9 as the model requiring the most attention
+because of its 19.32% train-test gap.
 
-Performance tradeoff should explain an important tradeoff
-between the models, such as accuracy, F1, or fit time.
+Performance tradeoff:
+Explain an important tradeoff among the final models.
 
-Next experiment should recommend one useful next experiment
-or tuning step.
+Next experiment:
+Recommend one reasonable future experiment based on the
+final v7-v9 results.
 
 For deployment readiness:
 
-Recommended model should identify the strongest candidate
-for deployment based on the available evaluation results.
+Recommended model:
+Identify Decision Tree v8.
 
+Status:
+Evaluate the readiness of the CURRENT production model.
 Status must be exactly one of:
 Ready
 Needs Improvement
 Not Ready
 
-Reason should explain why the recommended model received
-that deployment-readiness status.
+Reason:
+Explain the status using the final v8 evaluation metrics.
 
-Risk should identify the most important concern before
-deployment.
+Risk:
+Identify the most important remaining production risk.
 
-Next step should recommend one action that should be taken
-before deployment.
+Next step:
+Recommend an action for monitoring or improving the model
+AFTER deployment.
 
-Do not claim that a model is already deployed.
+Remember:
+Decision Tree v8 is already deployed to production.
 
-Base every insight only on the results provided.
+Base every insight only on the final v7, v8, and v9 results
+provided above.
+
+Do not mention old experiments.
 
 Do not use Markdown.
 
@@ -329,7 +418,6 @@ Do not include text before or after the JSON.
         deployment_readiness=deployment_readiness,
         ai_error=ai_error
     )
-
 
 if __name__ == "__main__":
     app.run(debug=True)

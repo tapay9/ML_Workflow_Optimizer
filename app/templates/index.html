@@ -13,328 +13,338 @@
 
 <body>
 
-    <div class="dashboard-container">
+<div class="dashboard-container">
 
-        <!-- Sidebar -->
-        <aside class="sidebar">
+    <!-- Sidebar -->
+    <aside class="sidebar">
 
-            <div class="brand">
-                <div class="brand-icon">ML</div>
-
-                <div>
-                    <h2>ML Workflow</h2>
-                    <span>Optimizer</span>
-                </div>
-            </div>
-
-            <nav class="sidebar-nav">
-
-                <a href="#" class="nav-item active">
-                    <span>▦</span>
-                    Dashboard
-                </a>
-
-                <a href="{{ url_for('models') }}" class="nav-item">
-                    <span>◈</span>
-                    Models
-                </a>
-
-                <a href="{{ url_for('experiments') }}" class="nav-item">
-                    <span>⌁</span>
-                    Experiments
-                </a>
-
-                <a href="{{ url_for('monitoring') }}" class="nav-item">
-                    <span>◉</span>
-                    Monitoring
-                </a>
-
-                <a href="{{ url_for('ai_insights') }}" class="nav-item">
-                    <span>✦</span>
-                    AI Insights
-                </a>
-
-            </nav>
-
-            <div class="sidebar-footer">
-                <span class="status-dot"></span>
-                ML Pipeline Active
-            </div>
-
-        </aside>
-
-
-        <!-- Main Dashboard -->
-        <main class="main-content">
-
-            <!-- Header -->
-            <header class="dashboard-header">
-
-                <div>
-                    <p class="page-label">ML WORKSPACE</p>
-
-                    <h1>Dashboard</h1>
-
-                    <p class="subtitle">
-                        Monitor your machine learning workflow,
-                        experiments, and model performance.
-                    </p>
-                </div>
-
-                <div class="header-status">
-                    <span class="status-dot"></span>
-                    Pipeline Active
-                </div>
-
-            </header>
-
-
-<!-- Overview Cards -->
-<section class="stats-grid">
-
-    <div class="stat-card">
-
-        <div class="stat-top">
-            <span class="stat-label">
-                DATASET RECORDS
-            </span>
-
-            <span class="stat-icon">▦</span>
-        </div>
-
-        <h2>119,144</h2>
-
-        <p>Cleaned hotel bookings</p>
-
-    </div>
-
-
-    <div class="stat-card">
-
-        <div class="stat-top">
-            <span class="stat-label">
-                DATASET COLUMNS
-            </span>
-
-            <span class="stat-icon">◫</span>
-        </div>
-
-        <h2>29</h2>
-
-        <p>After preprocessing</p>
-
-    </div>
-
-
-    <div class="stat-card">
-
-        <div class="stat-top">
-            <span class="stat-label">
-                MODELS TRAINED
-            </span>
-
-            <span class="stat-icon">◇</span>
-        </div>
-
-        <h2>3</h2>
-
-        <p>Baseline classifiers</p>
-
-    </div>
-
-
-    <div class="stat-card featured">
-
-        <div class="stat-top">
-            <span class="stat-label">
-                BEST BASELINE
-            </span>
-
-            <span class="stat-icon">↗</span>
-        </div>
-
-        <h2>
-             {{ "%.2f"|format(best_model["test_acc"] * 100) }}%
-        </h2>
-
-        <p>
-            {{ best_model["model"] }}
-        </p>
-
-    </div>
-
-</section>
-
-
-<!-- Main Dashboard Grid -->
-<section class="dashboard-grid">
-
-    <!-- Model Performance -->
-    <div class="dashboard-panel model-performance">
-
-        <div class="panel-header">
+        <div class="brand">
+            <div class="brand-icon">ML</div>
 
             <div>
-                <p class="panel-label">
-                    MODEL PERFORMANCE
-                </p>
-
-                <h2>
-                    Baseline Model Comparison
-                </h2>
+                <h2>ML Workflow</h2>
+                <span>Optimizer</span>
             </div>
-
-            <span class="panel-badge">
-                3 Models
-            </span>
-
         </div>
 
-        <p class="panel-description">
-            Accuracy results from the current
-            baseline classification models.
-        </p>
+        <nav class="sidebar-nav">
+
+            <a href="#" class="nav-item active">
+                <span>▦</span>
+                Dashboard
+            </a>
+
+            <a href="{{ url_for('models') }}" class="nav-item">
+                <span>◈</span>
+                Models
+            </a>
+
+            <a href="{{ url_for('experiments') }}" class="nav-item">
+                <span>⌁</span>
+                Experiments
+            </a>
+
+            <a href="{{ url_for('monitoring') }}" class="nav-item">
+                <span>◉</span>
+                Monitoring
+            </a>
+
+            <a href="{{ url_for('ai_insights') }}" class="nav-item">
+                <span>✦</span>
+                AI Insights
+            </a>
+
+            <a href="{{ url_for('deploy.deploy_page') }}" class="nav-item">
+                <span>⇪</span>
+                Deployment
+            </a>
+
+        </nav>
+
+        <div class="sidebar-footer">
+            <span class="status-dot"></span>
+            ML Pipeline Active
+        </div>
+
+    </aside>
 
 
-        <!-- Dynamic Model Results -->
-        <div class="model-list">
+    <!-- Main Dashboard -->
+    <main class="main-content">
 
-            {% for result in model_results %}
+        <!-- Header -->
+        <header class="dashboard-header">
 
-            <div class="model-result">
+            <div>
+                <p class="page-label">ML WORKSPACE</p>
 
-                <div class="model-info">
+                <h1>Dashboard</h1>
+
+                <p class="subtitle">
+                    Monitor your machine learning workflow,
+                    final models, deployment, and model performance.
+                </p>
+            </div>
+
+            <div class="header-status">
+                <span class="status-dot"></span>
+                Pipeline Active
+            </div>
+
+        </header>
+
+
+        <!-- Overview Cards -->
+        <section class="stats-grid">
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+                    <span class="stat-label">
+                        DATASET RECORDS
+                    </span>
+
+                    <span class="stat-icon">▦</span>
+                </div>
+
+                <h2>119,144</h2>
+
+                <p>Cleaned hotel bookings</p>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+                    <span class="stat-label">
+                        DATASET COLUMNS
+                    </span>
+
+                    <span class="stat-icon">◫</span>
+                </div>
+
+                <h2>29</h2>
+
+                <p>After preprocessing</p>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+                    <span class="stat-label">
+                        FINAL MODELS
+                    </span>
+
+                    <span class="stat-icon">◇</span>
+                </div>
+
+                <h2>3</h2>
+
+                <p>v7 · v8 · v9</p>
+
+            </div>
+
+
+            <div class="stat-card featured">
+
+                <div class="stat-top">
+                    <span class="stat-label">
+                        BEST MODEL
+                    </span>
+
+                    <span class="stat-icon">↗</span>
+                </div>
+
+                <h2>
+                    {{ "%.2f"|format(best_model["test_acc"] * 100) }}%
+                </h2>
+
+                <p>
+                    {{ best_model["model"] }} · v8
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- Main Dashboard Grid -->
+        <section class="dashboard-grid">
+
+            <!-- Model Performance -->
+            <div class="dashboard-panel model-performance">
+
+                <div class="panel-header">
 
                     <div>
+                        <p class="panel-label">
+                            MODEL PERFORMANCE
+                        </p>
 
-                        <h3>
-                            {{ result["model"] }}
-                        </h3>
-
-                        {% if result["model"] == "Decision Tree" %}
-
-                            <span>
-                                Best baseline
-                            </span>
-
-                        {% else %}
-
-                            <span>
-                                Baseline classifier
-                            </span>
-
-                        {% endif %}
-
+                        <h2>
+                            Final Model Comparison
+                        </h2>
                     </div>
 
-
-                    <strong>
-                        {{ "%.2f"|format(result["test_acc"] * 100) }}%
-                    </strong>
+                    <span class="panel-badge">
+                        v7 · v8 · v9
+                    </span>
 
                 </div>
 
-
-                <div class="progress-bar">
-
-                    <div
-                        class="progress-value"
-                        style="width: {{ result['test_acc'] * 100 }}%;">
-                    </div>
-
-                </div>
-
-            </div>
-
-            {% endfor %}
-
-        </div>
-
-    </div>
-
-
-    <!-- Dataset Overview -->
-    <div class="dashboard-panel dataset-overview">
-
-        <div class="panel-header">
-
-            <div>
-                <p class="panel-label">
-                    DATASET
+                <p class="panel-description">
+                    Test accuracy results from the final
+                    trained classification models.
                 </p>
 
-                <h2>
-                    Dataset Overview
-                </h2>
-            </div>
 
-            <span class="panel-badge">
-                Cleaned
-            </span>
+                <div class="model-list">
 
-        </div>
+                    {% for result in model_results %}
 
+                    <div class="model-result">
 
-        <p class="panel-description">
-            Hotel booking data prepared for
-            cancellation prediction.
-        </p>
+                        <div class="model-info">
 
+                            <div>
 
-        <div class="dataset-details">
+                                <h3>
+                                    {{ result["model"] }}
+                                </h3>
 
-            <div class="dataset-row">
-                <span>Target Variable</span>
-                <strong>is_canceled</strong>
-            </div>
+                                {% if result["model"] == "Logistic Regression" %}
 
-            <div class="dataset-row">
-                <span>Not Canceled</span>
-                <strong>62.95%</strong>
-            </div>
+                                    <span>
+                                        v7 · Logistic Regression
+                                    </span>
 
-            <div class="dataset-row">
-                <span>Canceled</span>
-                <strong>37.05%</strong>
-            </div>
+                                {% elif result["model"] == "Decision Tree" %}
 
-            <div class="dataset-row">
-                <span>Missing Values</span>
-                <strong>0</strong>
-            </div>
+                                    <span>
+                                        v8 · Production Model
+                                    </span>
 
-            <div class="dataset-row">
-                <span>Duplicates</span>
-                <strong>0</strong>
-            </div>
+                                {% elif result["model"] == "KNN" %}
 
-        </div>
+                                    <span>
+                                        v9 · KNN
+                                    </span>
+
+                                {% endif %}
+
+                            </div>
 
 
-        <!-- Engineered Features -->
-        <div class="feature-section">
+                            <strong>
+                                {{ "%.2f"|format(result["test_acc"] * 100) }}%
+                            </strong>
 
-            <p>
-                ENGINEERED FEATURES
-            </p>
+                        </div>
 
-            <div class="feature-tags">
 
-                <span>total_guests</span>
+                        <div class="progress-bar">
 
-                <span>total_nights</span>
+                            <div
+                                class="progress-value"
+                                style="width: {{ result['test_acc'] * 100 }}%;">
+                            </div>
 
-                <span>hotel_type</span>
+                        </div>
+
+                    </div>
+
+                    {% endfor %}
+
+                </div>
 
             </div>
 
-        </div>
 
-    </div>
+            <!-- Dataset Overview -->
+            <div class="dashboard-panel dataset-overview">
 
-</section>
+                <div class="panel-header">
 
-</main>
+                    <div>
+                        <p class="panel-label">
+                            DATASET
+                        </p>
+
+                        <h2>
+                            Dataset Overview
+                        </h2>
+                    </div>
+
+                    <span class="panel-badge">
+                        Cleaned
+                    </span>
+
+                </div>
+
+
+                <p class="panel-description">
+                    Hotel booking data prepared for
+                    cancellation prediction.
+                </p>
+
+
+                <div class="dataset-details">
+
+                    <div class="dataset-row">
+                        <span>Target Variable</span>
+                        <strong>is_canceled</strong>
+                    </div>
+
+                    <div class="dataset-row">
+                        <span>Not Canceled</span>
+                        <strong>62.95%</strong>
+                    </div>
+
+                    <div class="dataset-row">
+                        <span>Canceled</span>
+                        <strong>37.05%</strong>
+                    </div>
+
+                    <div class="dataset-row">
+                        <span>Missing Values</span>
+                        <strong>0</strong>
+                    </div>
+
+                    <div class="dataset-row">
+                        <span>Duplicates</span>
+                        <strong>0</strong>
+                    </div>
+
+                </div>
+
+
+                <!-- Engineered Features -->
+                <div class="feature-section">
+
+                    <p>
+                        ENGINEERED FEATURES
+                    </p>
+
+                    <div class="feature-tags">
+
+                        <span>total_guests</span>
+
+                        <span>total_nights</span>
+
+                        <span>hotel_type</span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
 
 </div>
 

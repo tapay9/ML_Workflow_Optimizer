@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Deployment | ML Workflow Optimizer</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-icon">ML</div>
+
+            <div>
+                <h2>ML Workflow</h2>
+                <span>Optimizer</span>
+            </div>
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <a href="{{ url_for('home') }}" class="nav-item">
+                <span>▦</span>
+                Dashboard
+            </a>
+
+            <a href="{{ url_for('models') }}" class="nav-item">
+                <span>◈</span>
+                Models
+            </a>
+
+            <a href="{{ url_for('experiments') }}" class="nav-item">
+                <span>⌁</span>
+                Experiments
+            </a>
+
+            <a href="{{ url_for('monitoring') }}" class="nav-item">
+                <span>◉</span>
+                Monitoring
+            </a>
+
+            <a href="{{ url_for('ai_insights') }}" class="nav-item">
+                <span>✦</span>
+                AI Insights
+            </a>
+
+            <a href="{{ url_for('deploy.deploy_page') }}" class="nav-item active">
+                <span>⇪</span>
+                Deployment
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-footer">
+            <span class="status-dot"></span>
+            ML Pipeline Active
+        </div>
+
+    </aside>
+
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Header -->
+        <header class="dashboard-header">
+
+            <div>
+                <p class="page-label">
+                    ML WORKSPACE
+                </p>
+
+                <h1>Deployment</h1>
+
+                <p class="subtitle">
+                    Manage model versions, promote a model to
+                    production, and test live predictions.
+                </p>
+            </div>
+
+            <div class="header-status">
+                <span class="status-dot"></span>
+                <span id="live-status">Loading…</span>
+            </div>
+
+        </header>
+
+        <div id="msg" class="deploy-msg"></div>
+
+
+        <!-- Versions -->
+        <section class="dashboard-panel deploy-panel">
+
+            <div class="panel-header">
+
+                <div>
+                    <p class="panel-label">MODEL REGISTRY</p>
+                    <h2>Versions</h2>
+                </div>
+
+                <div class="deploy-controls">
+                    <select id="model" class="deploy-input"></select>
+                    <button id="rollback" class="deploy-btn">Roll back</button>
+                </div>
+
+            </div>
+
+            <p class="panel-description">
+                Every model saved by the training script is stored as a
+                numbered version. Only one version can be in production.
+            </p>
+
+            <div class="experiment-table-wrapper">
+                <table class="experiment-table">
+                    <thead>
+                        <tr>
+                            <th>Version</th>
+                            <th>Algorithm</th>
+                            <th>Accuracy</th>
+                            <th>Macro-F1</th>
+                            <th>ROC-AUC</th>
+                            <th>Gap</th>
+                            <th>Stage</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="versions"></tbody>
+                </table>
+            </div>
+
+        </section>
+
+
+        <section class="dashboard-grid deploy-grid">
+
+            <!-- Prediction tester -->
+            <div class="dashboard-panel">
+
+                <div class="panel-header">
+                    <div>
+                        <p class="panel-label">LIVE TEST</p>
+                        <h2>Predict a booking</h2>
+                    </div>
+                    <span class="panel-badge" id="predict-target">PRODUCTION</span>
+                </div>
+
+                <p class="panel-description">
+                    Edit the booking below (JSON) and score it with the model
+                    that is currently in production.
+                </p>
+
+                <textarea id="record" class="deploy-input deploy-json" spellcheck="false"></textarea>
+
+                <div class="deploy-controls">
+                    <button id="predict" class="deploy-btn primary">Predict</button>
+                    <button id="example" class="deploy-btn">Reset example</button>
+                </div>
+
+                <div id="result" class="deploy-result"></div>
+
+            </div>
+
+
+            <!-- History -->
+            <div class="dashboard-panel">
+
+                <div class="panel-header">
+                    <div>
+                        <p class="panel-label">AUDIT TRAIL</p>
+                        <h2>Deployment history</h2>
+                    </div>
+                </div>
+
+                <div class="experiment-table-wrapper">
+                    <table class="experiment-table">
+                        <thead>
+                            <tr><th>When (UTC)</th><th>Version</th><th>Action</th><th>By</th></tr>
+                        </thead>
+                        <tbody id="history"></tbody>
+                    </table>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g,
+    c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pct = x => typeof x === "number" ? (x * 100).toFixed(2) + "%" : "—";
+const dec = x => typeof x === "number" ? x.toFixed(4) : "—";
+const say = (t, bad) => { const m = $("msg"); m.textContent = t; m.className = "deploy-msg" + (t ? (bad ? " bad" : " ok") : ""); };
+
+let versions = [];
+
+async function api(path, opts) {
+  const r = await fetch(path, opts);
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.error || r.statusText);
+  return data;
+}
+const post = (p, body) => api(p, { method: "POST", headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify(body || {}) });
+const name = () => encodeURIComponent($("model").value);
+
+async function loadModels() {
+  const models = await api("/api/models");
+  $("model").innerHTML = models.map(m => `<option>${esc(m.name)}</option>`).join("");
+  if (!models.length) {
+    $("live-status").textContent = "No models registered";
+    $("versions").innerHTML = `<tr><td colspan="9">No models registered yet. Run the training script
+      (src/model_analysis) to register models.</td></tr>`;
+    return;
+  }
+  await refresh(true);
+}
+
+async function refresh(resetExample) {
+  const [vs, hist] = await Promise.all([
+    api(`/api/models/${name()}/versions`), api(`/api/models/${name()}/history`)]);
+  versions = vs;
+
+  const prod = vs.find(v => v.stage === "production");
+  $("live-status").textContent = prod ? `Production: v${prod.version} · ${prod.algorithm}` : "Nothing deployed";
+  $("predict-target").textContent = prod ? `PRODUCTION · v${prod.version}` : "NOT DEPLOYED";
+
+  $("versions").innerHTML = vs.map(v => {
+    const m = v.metrics || {};
+    return `<tr>
+      <td>v${v.version}</td>
+      <td class="experiment-model">${esc(v.algorithm)}</td>
+      <td>${pct(m.test_acc ?? m.accuracy)}</td>
+      <td>${dec(m.macro_f1)}</td>
+      <td>${dec(m.roc_auc)}</td>
+      <td>${pct(m.overfit_gap)}</td>
+      <td><span class="stage-pill ${esc(v.stage)}">${esc(v.stage)}</span></td>
+      <td>${esc(v.created_at.replace("T", " ").replace("Z", ""))}</td>
+      <td>
+        <button class="deploy-btn sm" data-v="${v.version}" data-s="staging">Staging</button>
+        <button class="deploy-btn sm primary" data-v="${v.version}" data-s="production">Deploy</button>
+        <button class="deploy-btn sm" data-v="${v.version}" data-s="archived">Archive</button>
+      </td></tr>`; }).join("");
+
+  $("history").innerHTML = hist.map(h =>
+    `<tr><td>${esc(h.created_at.replace("T", " ").replace("Z", ""))}</td>
+         <td>v${h.version} · ${esc(h.algorithm)}</td><td>${esc(h.action)}</td>
+         <td>${esc(h.deployed_by || "—")}</td></tr>`).join("")
+    || `<tr><td colspan="4">No deployments yet.</td></tr>`;
+
+  if (resetExample) loadExample();
+}
+
+function loadExample() {
+  const v = versions.find(v => v.stage === "production") || versions[0];
+  const ex = v && v.schema && v.schema.example;
+
+  if (!ex) {
+    $("record").value = "{}";
+    return;
+  }
+
+  // Copy the example without changing the saved model schema
+  const displayExample = { ...ex };
+
+  // Remove original features that were combined
+  // during feature engineering
+  delete displayExample.adults;
+  delete displayExample.children;
+  delete displayExample.babies;
+  delete displayExample.stays_in_week_nights;
+  delete displayExample.stays_in_weekend_nights;
+
+  // Keep engineered features visible:
+  // total_guests
+  // total_nights
+
+  $("record").value = JSON.stringify(displayExample, null, 2);
+}
+
+$("versions").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-s]"); if (!b) return;
+  try {
+    await post(`/api/models/${name()}/versions/${b.dataset.v}/stage`, { stage: b.dataset.s, by: "web-ui" });
+    say(`v${b.dataset.v} moved to ${b.dataset.s}.`); await refresh(false);
+  } catch (err) { say(err.message, true); }
+});
+
+$("rollback").onclick = async () => {
+  try { const m = await post(`/api/models/${name()}/rollback`, { by: "web-ui" });
+        say(`Rolled back: v${m.version} is in production.`); await refresh(false); }
+  catch (err) { say(err.message, true); }
+};
+
+$("predict").onclick = async () => {
+  try {
+    const rec = JSON.parse($("record").value);
+    const out = await post(`/api/predict/${name()}`, { record: rec });
+    const r = out.results[0];
+    const label = r.prediction === 1 ? "Likely to cancel" : "Likely to keep the booking";
+    const prob = r.probability != null ? ` · cancellation probability ${(r.probability * 100).toFixed(1)}%` : "";
+    $("result").className = "deploy-result " + (r.prediction === 1 ? "warn" : "good");
+    $("result").innerHTML = `<strong>${label}</strong>${prob}<br>
+      <span>v${out.version} · ${esc(out.algorithm)} · ${out.latency_ms} ms</span>`;
+    say("");
+  } catch (err) { $("result").className = "deploy-result"; $("result").textContent = ""; say(err.message, true); }
+};
+
+$("example").onclick = loadExample;
+$("model").onchange = () => refresh(true);
+loadModels().catch(e => say(e.message, true));
+</script>
+</body>
+</html>

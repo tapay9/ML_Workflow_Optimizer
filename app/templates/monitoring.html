@@ -54,6 +54,11 @@
                 AI Insights
             </a>
 
+            <a href="{{ url_for('deploy.deploy_page') }}" class="nav-item">
+                <span>⇪</span>
+                Deployment
+            </a>
+
         </nav>
 
         <div class="sidebar-footer">
@@ -67,6 +72,7 @@
     <!-- Main Content -->
     <main class="main-content">
 
+        <!-- Header -->
         <header class="dashboard-header">
 
             <div>
@@ -75,8 +81,8 @@
                 <h1>Monitoring</h1>
 
                 <p class="subtitle">
-                    Visualize model performance and monitor
-                    machine learning experiment results.
+                    Monitor model performance, generalization,
+                    and live prediction activity.
                 </p>
             </div>
 
@@ -91,6 +97,7 @@
         <!-- Monitoring Summary -->
         <section class="stats-grid">
 
+            <!-- Models Monitored -->
             <div class="stat-card">
 
                 <div class="stat-top">
@@ -99,11 +106,13 @@
                 </div>
 
                 <h2>{{ model_results|length }}</h2>
+
                 <p>Current baseline models</p>
 
             </div>
 
 
+            <!-- Top Accuracy -->
             <div class="stat-card">
 
                 <div class="stat-top">
@@ -120,6 +129,7 @@
             </div>
 
 
+            <!-- Dataset Records -->
             <div class="stat-card">
 
                 <div class="stat-top">
@@ -128,11 +138,13 @@
                 </div>
 
                 <h2>119,144</h2>
+
                 <p>Bookings analyzed</p>
 
             </div>
 
 
+            <!-- Pipeline Status -->
             <div class="stat-card featured">
 
                 <div class="stat-top">
@@ -141,9 +153,180 @@
                 </div>
 
                 <h2>Active</h2>
+
                 <p>Results available</p>
 
             </div>
+
+        </section>
+
+
+        <!-- Live Prediction Monitoring -->
+        <section class="dashboard-panel monitoring-panel">
+
+            <div class="panel-header">
+
+                <div>
+                    <p class="panel-label">
+                        LIVE MONITORING
+                    </p>
+
+                    <h2>
+                        Prediction Activity
+                    </h2>
+                </div>
+
+                <span class="panel-badge">
+                    SQLite Logs
+                </span>
+
+            </div>
+
+            <p class="panel-description">
+                Prediction events captured from deployed model activity.
+                Statistics update automatically when new predictions are made.
+            </p>
+
+
+            {% if live_stats %}
+
+                {% set total_predictions = live_stats|sum(attribute='n') %}
+
+
+                <!-- Live Metric Cards -->
+                <div style="
+                    display: grid;
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    gap: 12px;
+                    margin-top: 22px;
+                    margin-bottom: 24px;
+                ">
+
+                    <!-- Total Predictions -->
+                    <div class="metric-box">
+
+                        <span>
+                            Total Predictions
+                        </span>
+
+                        <strong id="total-predictions">
+                            {{ total_predictions }}
+                        </strong>
+
+                    </div>
+
+
+                    <!-- Versions With Activity -->
+                    <div class="metric-box">
+
+                        <span>
+                            Versions With Activity
+                        </span>
+
+                        <strong id="versions-active">
+                            {{ live_stats|length }}
+                        </strong>
+
+                    </div>
+
+
+                    <!-- Latest Active Version -->
+                    <div class="metric-box">
+
+                        <span>
+                            Latest Active Version
+                        </span>
+
+                        <strong id="latest-version">
+                            v{{ live_stats[0]["version"] }}
+                        </strong>
+
+                    </div>
+
+
+                    <!-- Average Latency -->
+                    <div class="metric-box">
+
+                        <span>
+                            Average Latency
+                        </span>
+
+                        <strong id="average-latency">
+                            {{ "%.3f"|format(
+                                live_stats[0]["avg_latency_ms"]
+                            ) }} ms
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Live Prediction Table -->
+                <div class="experiment-table-wrapper">
+
+                    <table class="experiment-table">
+
+                        <thead>
+
+                            <tr>
+                                <th>Model Version</th>
+                                <th>Predictions Logged</th>
+                                <th>Average Latency</th>
+                                <th>Status</th>
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody id="prediction-table-body">
+
+                            {% for stat in live_stats %}
+
+                            <tr>
+
+                                <td class="experiment-model">
+                                    v{{ stat["version"] }}
+                                </td>
+
+                                <td>
+                                    {{ stat["n"] }}
+                                </td>
+
+                                <td>
+                                    {{ "%.3f"|format(
+                                        stat["avg_latency_ms"]
+                                    ) }} ms
+                                </td>
+
+                                <td>
+                                    <span class="stage-pill {{ stat['stage'] }}">
+                                        {{ stat["stage"]|capitalize }}
+                                    </span>
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+            {% else %}
+
+                <!-- No Predictions Yet -->
+                <div class="model-warning">
+
+                    No live predictions have been logged yet.
+                    Use the Deployment page to test a prediction.
+
+                </div>
+
+            {% endif %}
 
         </section>
 
@@ -154,6 +337,7 @@
             <div class="panel-header">
 
                 <div>
+
                     <p class="panel-label">
                         PERFORMANCE MONITORING
                     </p>
@@ -161,6 +345,7 @@
                     <h2>
                         Model Performance Comparison
                     </h2>
+
                 </div>
 
                 <span class="panel-badge">
@@ -169,22 +354,25 @@
 
             </div>
 
+
             <p class="panel-description">
                 Comparison of accuracy, Macro-F1, and ROC-AUC
                 across the trained models.
             </p>
+
 
             <div id="performance-chart"></div>
 
         </section>
 
 
-        <!-- Overfitting Chart -->
+        <!-- Generalization / Overfitting Chart -->
         <section class="dashboard-panel monitoring-panel">
 
             <div class="panel-header">
 
                 <div>
+
                     <p class="panel-label">
                         GENERALIZATION MONITORING
                     </p>
@@ -192,14 +380,17 @@
                     <h2>
                         Training vs Test Accuracy
                     </h2>
+
                 </div>
 
             </div>
+
 
             <p class="panel-description">
                 Compare training and testing performance to
                 identify possible model overfitting.
             </p>
+
 
             <div id="overfitting-chart"></div>
 
@@ -210,16 +401,199 @@
 </div>
 
 
-<!-- Model data from Flask -->
+<!-- Flask Data -->
 <script>
     const modelData = {{ model_results | tojson }};
+    const livePredictionData = {{ live_stats | tojson }};
 </script>
+
 
 <!-- D3.js -->
 <script src="https://d3js.org/d3.v7.min.js"></script>
 
-<!-- Monitoring Charts -->
+
+<!-- Existing Monitoring Charts -->
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+
+
+<!-- Automatic Live Monitoring -->
+<script>
+
+    async function updateMonitoringStats() {
+
+        try {
+
+            const response =
+                await fetch("/api/monitoring/stats");
+
+            if (!response.ok) {
+                throw new Error(
+                    "Unable to load monitoring statistics."
+                );
+            }
+
+            const data = await response.json();
+
+
+            /* -----------------------------
+               Update Total Predictions
+            ----------------------------- */
+
+            const totalPredictions =
+                document.getElementById(
+                    "total-predictions"
+                );
+
+            if (totalPredictions) {
+
+                totalPredictions.textContent =
+                    data.total_predictions;
+
+            }
+
+
+            /* -----------------------------
+               Update Versions With Activity
+            ----------------------------- */
+
+            const versionsActive =
+                document.getElementById(
+                    "versions-active"
+                );
+
+            if (versionsActive) {
+
+                versionsActive.textContent =
+                    data.versions_with_activity;
+
+            }
+
+
+            /* -----------------------------
+               Update Latest Active Version
+            ----------------------------- */
+
+            const latestVersion =
+                document.getElementById(
+                    "latest-version"
+                );
+
+            if (
+                latestVersion &&
+                data.stats &&
+                data.stats.length > 0
+            ) {
+
+                latestVersion.textContent =
+                    "v" + data.stats[0].version;
+
+            }
+
+
+            /* -----------------------------
+               Update Average Latency
+            ----------------------------- */
+
+            const averageLatency =
+                document.getElementById(
+                    "average-latency"
+                );
+
+            if (
+                averageLatency &&
+                data.stats &&
+                data.stats.length > 0
+            ) {
+
+                const latency =
+                    Number(
+                        data.stats[0].avg_latency_ms
+                    );
+
+                averageLatency.textContent =
+                    latency.toFixed(3) + " ms";
+
+            }
+
+
+            /* -----------------------------
+               Update Prediction Table
+            ----------------------------- */
+
+            const tableBody =
+                document.getElementById(
+                    "prediction-table-body"
+                );
+
+            if (
+                tableBody &&
+                data.stats
+            ) {
+
+                tableBody.innerHTML = "";
+
+                data.stats.forEach(stat => {
+
+                    const row =
+                        document.createElement("tr");
+
+                    const latency =
+                        Number(
+                            stat.avg_latency_ms
+                        ).toFixed(3);
+
+                    row.innerHTML = `
+                        <td class="experiment-model">
+                            v${stat.version}
+                        </td>
+
+                        <td>
+                            ${stat.n}
+                        </td>
+
+                        <td>
+                            ${latency} ms
+                        </td>
+                        
+                        <td>
+                            <span class="stage-pill ${stat.stage}">
+                                ${stat.stage.charAt(0).toUpperCase() + stat.stage.slice(1)}
+                            </span>
+                        </td>
+                    `;
+
+                    tableBody.appendChild(row);
+
+                });
+
+            }
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Monitoring update failed:",
+                error
+            );
+
+        }
+
+    }
+
+
+    /* Run once immediately */
+    updateMonitoringStats();
+
+
+    /* Check SQLite prediction logs every 3 seconds */
+    setInterval(
+        updateMonitoringStats,
+        3000
+    );
+
+</script>
+
 
 </body>
 

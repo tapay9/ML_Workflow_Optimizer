@@ -98,6 +98,26 @@ Additional model analysis outputs, including confusion matrices, ROC/PR curves, 
 
 ---
 
+## 🗄️ Model Registry & Deployment
+
+Trained models are versioned in a SQLite database (`data/mlwo.db`, created automatically) and served from the **Deployment** page (`/deploy`).
+
+```
+# 1. Train, evaluate and register the models (run from src/)
+python model_analysis.py            # export the notebook cell to a script first, or run it in Jupyter
+python model_analysis.py --quick    # faster: 30k rows, skips KNN
+python model_analysis.py --no-register   # evaluate only, don't save versions
+
+# 2. Start the app and open http://127.0.0.1:5000/deploy
+python app/app.py
+```
+
+- Every run saves each model as a new version of `hotel_cancellation` (weights in `models/`, metrics + feature list + checksum in SQLite).
+- On `/deploy` you can promote a version to **staging** / **production**, **roll back**, and test a booking against the live model.
+- Only one version is in production at a time; every change is recorded in the deployment history.
+- API: `POST /api/predict/hotel_cancellation` with `{"record": {...}}` scores a raw booking.
+- Tests: `python -m pytest tests`
+
 ## 🧑‍💻 Git Workflow & Guidelines
 
 To maintain collaboration integrity, remember to:
