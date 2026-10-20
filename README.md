@@ -20,8 +20,8 @@ ModelPilot is deployed on **Google Cloud Run** and is accessible through a web b
 - **Cloud Platform:** Google Cloud Run
 - **Deployment:** Production cloud deployment
 
-> Add the final public Cloud Run URL here before submission.
-
+[> Add the final public Cloud Run URL here before submission.
+](https://ml-workflow-optimizer-git-548146111904.us-east1.run.app/?utm_source=chatgpt.com)
 ### 🎥 Project Walkthrough
 
 A project walkthrough demonstrates the complete ModelPilot workflow, including model comparison, experiment tracking, AI-generated insights, deployment management, predictions, and real-time monitoring.
