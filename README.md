@@ -26,7 +26,7 @@ ModelPilot is deployed on **Google Cloud Run** and is accessible through a web b
 
 A project walkthrough demonstrates the complete ModelPilot workflow, including model comparison, experiment tracking, AI-generated insights, deployment management, predictions, and real-time monitoring.
 
-> Add `demo.gif` here before final submission if required by the course.
+![ModelPilot Project Walkthrough](demo.gif)
 
 ---
 
