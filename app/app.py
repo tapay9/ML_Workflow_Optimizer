@@ -77,7 +77,7 @@ if str(BASE_DIR) not in sys.path:
 # Model registry + deployment interface
 # -------------------------------------------------
 
-from .deploy_routes import deploy_bp
+from deploy_routes import deploy_bp
 from src.model_registry import (
     DEFAULT_MODEL_NAME,
     list_versions
