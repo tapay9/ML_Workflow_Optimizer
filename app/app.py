@@ -86,6 +86,7 @@ from src.serving import (
     predict as serve_prediction,
     prediction_stats
 )
+from src.ai_retraining import retrain_from_ai_suggestion
 
 app.register_blueprint(deploy_bp)
 
@@ -746,7 +747,15 @@ Use exactly this structure:
         "best_model": "short recommendation",
         "overfitting": "short recommendation",
         "performance_tradeoff": "short recommendation",
-        "next_experiment": "short recommendation"
+        "next_experiment": "short recommendation",
+        "parameter_suggestion": {{
+            "model": "Decision Tree",
+            "parameters": {{
+                "max_depth": 10,
+                "min_samples_leaf": 4
+            }},
+            "reason": "short explanation of why these parameters should be tested"
+        }}
     }},
     "deployment_readiness": {{
         "recommended_model": "model name and version",
@@ -790,6 +799,43 @@ Explain an important tradeoff among the final models.
 Next experiment:
 Recommend one reasonable future experiment based on the
 final v7-v9 results.
+
+Parameter suggestion:
+Provide one concrete hyperparameter configuration that can be
+accepted by the user and used to retrain a candidate model.
+
+The model must be exactly one of:
+Logistic Regression
+Decision Tree
+KNN
+
+Only use these supported parameters:
+
+Logistic Regression:
+C
+max_iter
+
+Decision Tree:
+max_depth
+min_samples_split
+min_samples_leaf
+criterion
+
+KNN:
+n_neighbors
+weights
+p
+
+Parameter values must be valid scikit-learn values.
+
+The parameter suggestion should be a reasonable experiment based
+only on the final v7-v9 model results.
+
+Do not simply repeat the current Decision Tree v8 configuration.
+The purpose is to test an alternative configuration.
+
+The reason should briefly explain why the suggested configuration
+is worth testing.
 
 For deployment readiness:
 
@@ -910,6 +956,12 @@ Do not include text before or after the JSON.
                     ]
 
                     parsed[
+                        "optimization_suggestions"
+                    ][
+                        "parameter_suggestion"
+                    ]
+
+                    parsed[
                         "deployment_readiness"
                     ]
 
@@ -992,7 +1044,83 @@ Do not include text before or after the JSON.
         ai_error=ai_error
     )
 
+# -------------------------------------------------
+# AI Hyperparameter Retraining API
+# -------------------------------------------------
 
+@app.route(
+    "/api/ai/retrain",
+    methods=["POST"]
+)
+def ai_retrain():
+    """
+    Accept an AI hyperparameter suggestion and
+    retrain one candidate model.
+
+    The newly trained model is registered as a new
+    version but is NOT automatically promoted to
+    Production.
+    """
+
+    try:
+        data = request.get_json() or {}
+
+        model_name = data.get("model")
+        parameters = data.get("parameters")
+
+        if not model_name:
+            return jsonify({
+                "success": False,
+                "error": "A model name is required."
+            }), 400
+
+        if not isinstance(parameters, dict):
+            return jsonify({
+                "success": False,
+                "error": (
+                    "parameters must be provided "
+                    "as a JSON object."
+                )
+            }), 400
+
+        if not parameters:
+            return jsonify({
+                "success": False,
+                "error": (
+                    "At least one hyperparameter "
+                    "must be provided."
+                )
+            }), 400
+
+        result = retrain_from_ai_suggestion(
+            model_name=model_name,
+            parameters=parameters,
+        )
+
+        return jsonify(result), 200
+
+    except ValueError as error:
+
+        return jsonify({
+            "success": False,
+            "error": str(error)
+        }), 400
+
+    except Exception as error:
+
+        print(
+            "AI retraining error:",
+            error
+        )
+
+        return jsonify({
+            "success": False,
+            "error": (
+                "The model could not be retrained. "
+                "Check the server logs for details."
+            )
+        }), 500
+    
 # -------------------------------------------------
 # Local development
 # -------------------------------------------------

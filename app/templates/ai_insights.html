@@ -439,6 +439,207 @@
                 </div>
 
 
+                {% if optimization_suggestions.get("parameter_suggestion") %}
+
+                {% set suggestion =
+                    optimization_suggestions["parameter_suggestion"]
+                %}
+
+                <div
+                    class="insight-card"
+                    style="
+                        margin-top: 24px;
+                        display: block;
+                    "
+                >
+
+                    <span class="insight-label">
+                        AI HYPERPARAMETER SUGGESTION
+                    </span>
+
+                    <h3 style="margin-top: 10px;">
+                        {{ suggestion["model"] }}
+                    </h3>
+
+                    <p style="margin-top: 12px;">
+                        <strong>Suggested Parameters:</strong>
+                    </p>
+
+                    <div
+                        style="
+                            margin-top: 8px;
+                            margin-bottom: 14px;
+                            padding: 12px;
+                            border-radius: 8px;
+                            background: rgba(0, 0, 0, 0.04);
+                        "
+                    >
+                        {% for parameter, value
+                           in suggestion["parameters"].items() %}
+
+                            <div>
+                                <strong>
+                                    {{ parameter }}
+                                </strong>:
+                                {{ value }}
+                            </div>
+
+                        {% endfor %}
+                    </div>
+
+                    <p>
+                        <strong>Why test this:</strong>
+                        {{ suggestion["reason"] }}
+                    </p>
+
+                    <button
+                        id="accept-retrain-button"
+                        type="button"
+                        style="
+                            margin-top: 18px;
+                            padding: 11px 18px;
+                            border: none;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            font-weight: 600;
+                        "
+                    >
+                        Accept & Retrain
+                    </button>
+
+                    <div
+                        id="retrain-status"
+                        style="
+                            display: none;
+                            margin-top: 16px;
+                            padding: 14px;
+                            border-radius: 8px;
+                        "
+                    ></div>
+
+                </div>
+
+                <script>
+                    const aiSuggestion = {{ suggestion | tojson }};
+
+                    const retrainButton = document.getElementById(
+                        "accept-retrain-button"
+                    );
+
+                    const retrainStatus = document.getElementById(
+                        "retrain-status"
+                    );
+
+                    retrainButton.addEventListener(
+                        "click",
+                        async function () {
+
+                            retrainButton.disabled = true;
+
+                            retrainButton.textContent =
+                                "Retraining...";
+
+                            retrainStatus.style.display =
+                                "block";
+
+                            retrainStatus.textContent =
+                                "Training a new candidate model using the accepted AI parameters...";
+
+                            try {
+
+                                const response = await fetch(
+                                    "/api/ai/retrain",
+                                    {
+                                        method: "POST",
+
+                                        headers: {
+                                            "Content-Type":
+                                                "application/json"
+                                        },
+
+                                        body: JSON.stringify({
+                                            model:
+                                                aiSuggestion.model,
+
+                                            parameters:
+                                                aiSuggestion.parameters
+                                        })
+                                    }
+                                );
+
+                                const data =
+                                    await response.json();
+
+                                if (!response.ok) {
+                                    throw new Error(
+                                        data.error ||
+                                        "Model retraining failed."
+                                    );
+                                }
+
+                                retrainStatus.innerHTML = `
+                                    <strong>
+                                        ✓ Retraining Complete
+                                    </strong>
+                                    <br><br>
+
+                                    Model:
+                                    ${data.model}
+                                    <br>
+
+                                    New Version:
+                                    v${data.version}
+                                    <br>
+
+                                    Test Accuracy:
+                                    ${(data.metrics.test_acc * 100).toFixed(2)}%
+                                    <br>
+
+                                    Macro-F1:
+                                    ${data.metrics.macro_f1.toFixed(4)}
+                                    <br>
+
+                                    ROC-AUC:
+                                    ${data.metrics.roc_auc.toFixed(4)}
+                                    <br>
+
+                                    Train-Test Gap:
+                                    ${(data.metrics.overfit_gap * 100).toFixed(2)}%
+                                    <br><br>
+
+                                    The new model was registered as a
+                                    candidate version and was not
+                                    automatically promoted to Production.
+                                `;
+
+                                retrainButton.textContent =
+                                    "Retraining Complete";
+
+                            } catch (error) {
+
+                                retrainStatus.innerHTML = `
+                                    <strong>
+                                        Retraining Failed
+                                    </strong>
+                                    <br><br>
+                                    ${error.message}
+                                `;
+
+                                retrainButton.disabled =
+                                    false;
+
+                                retrainButton.textContent =
+                                    "Accept & Retrain";
+                            }
+                        }
+                    );
+                </script>
+
+                {% endif %}
+
+                </div>
+
+
                 {% else %}
 
                 <div class="ai-placeholder">

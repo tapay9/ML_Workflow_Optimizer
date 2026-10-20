@@ -29,16 +29,40 @@
 
         <nav class="sidebar-nav">
 
-            <a href="{{ url_for('home') }}" class="nav-item"><span>▦</span>Dashboard</a>
-            <a href="{{ url_for('models') }}" class="nav-item active"><span>◈</span> Models</a>
-            <a href="{{ url_for('experiments') }}" class="nav-item"><span>⌁</span> Experiments</a>
-            <a href="{{ url_for('monitoring') }}" class="nav-item"><span>◉</span> Monitoring</a>
-            <a href="{{ url_for('ai_insights') }}" class="nav-item"><span>✦</span> AI Insights</a>
+            <a href="{{ url_for('home') }}" class="nav-item">
+                <span>▦</span>
+                Dashboard
+            </a>
+
+            <a href="{{ url_for('models') }}" class="nav-item active">
+                <span>◈</span>
+                Models
+            </a>
+
+            <a href="{{ url_for('experiments') }}" class="nav-item">
+                <span>⌁</span>
+                Experiments
+            </a>
+
+            <a href="{{ url_for('monitoring') }}" class="nav-item">
+                <span>◉</span>
+                Monitoring
+            </a>
+
+            <a href="{{ url_for('ai_insights') }}" class="nav-item">
+                <span>✦</span>
+                AI Insights
+            </a>
+
             <a href="{{ url_for('deploy.deploy_page') }}" class="nav-item">
                 <span>⇪</span>
                 Deployment
             </a>
-            <a href="{{ url_for('demo') }}" class="nav-item"><span>⚡</span> Demo</a>
+
+            <a href="{{ url_for('demo') }}" class="nav-item">
+                <span>⚡</span>
+                Demo
+            </a>
 
         </nav>
 
@@ -433,7 +457,7 @@
         </section>
 
 
-        <!-- FINAL MODEL REGISTRY -->
+        <!-- DYNAMIC MODEL REGISTRY -->
         <section class="dashboard-panel model-registry-panel">
 
             <div class="panel-header">
@@ -444,7 +468,7 @@
                     </p>
 
                     <h2>
-                        Final Registered Versions
+                        Registered Model Versions
                     </h2>
                 </div>
 
@@ -459,8 +483,8 @@
 
 
             <p class="panel-description">
-                Final trained models stored in the SQLite registry.
-                v8 is the selected production model.
+                Trained model versions stored in the SQLite registry.
+                New AI-retrained candidates appear here automatically.
             </p>
 
 
@@ -482,61 +506,87 @@
 
                     <tbody>
 
-                        <tr>
-                            <td><strong>v7</strong></td>
-
-                            <td class="experiment-model">
-                                LogisticRegression
-                            </td>
-
-                            <td>81.18%</td>
-                            <td>0.7883</td>
-                            <td>0.8883</td>
-
-                            <td>
-                                <span class="stage-pill archived">
-                                    archived
-                                </span>
-                            </td>
-                        </tr>
-
+                        {% for version in registry_versions if version["version"] >= 7 %}
 
                         <tr>
-                            <td><strong>v8</strong></td>
-
-                            <td class="experiment-model">
-                                DecisionTreeClassifier
-                            </td>
-
-                            <td>83.22%</td>
-                            <td>0.8176</td>
-                            <td>0.9100</td>
 
                             <td>
-                                <span class="stage-pill production">
-                                    production
-                                </span>
+                                <strong>
+                                    v{{ version["version"] }}
+                                </strong>
                             </td>
-                        </tr>
 
-
-                        <tr>
-                            <td><strong>v9</strong></td>
 
                             <td class="experiment-model">
-                                KNeighborsClassifier
+                                {{ version["algorithm"] }}
                             </td>
 
-                            <td>80.68%</td>
-                            <td>0.7801</td>
-                            <td>0.8789</td>
 
                             <td>
-                                <span class="stage-pill archived">
-                                    archived
-                                </span>
+
+                                {% if version["metrics"] and
+                                      version["metrics"].get("test_acc") is not none %}
+
+                                    {{ "%.2f"|format(
+                                        version["metrics"]["test_acc"] * 100
+                                    ) }}%
+
+                                {% else %}
+
+                                    —
+
+                                {% endif %}
+
                             </td>
+
+
+                            <td>
+
+                                {% if version["metrics"] and
+                                      version["metrics"].get("macro_f1") is not none %}
+
+                                    {{ "%.4f"|format(
+                                        version["metrics"]["macro_f1"]
+                                    ) }}
+
+                                {% else %}
+
+                                    —
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <td>
+
+                                {% if version["metrics"] and
+                                      version["metrics"].get("roc_auc") is not none %}
+
+                                    {{ "%.4f"|format(
+                                        version["metrics"]["roc_auc"]
+                                    ) }}
+
+                                {% else %}
+
+                                    —
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <td>
+
+                                <span class="stage-pill {{ version['stage'] }}">
+                                    {{ version["stage"] }}
+                                </span>
+
+                            </td>
+
                         </tr>
+
+                        {% endfor %}
 
                     </tbody>
 
@@ -551,4 +601,5 @@
 </div>
 
 </body>
+
 </html>
