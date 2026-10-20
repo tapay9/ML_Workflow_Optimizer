@@ -7,47 +7,99 @@ import os
 import sys
 import json
 import joblib
+import time
 
 # Load environment variables from .env
 load_dotenv()
 
 app = Flask(__name__)
 
+# -------------------------------------------------
+# AI Insights Cache
+# -------------------------------------------------
+# Reuse one successful Anthropic response for one hour.
+# This reduces repeated API calls and makes repeat visits faster.
+AI_CACHE = {
+    "data": None,
+    "time": 0
+}
+
+AI_CACHE_SECONDS = 3600
+
+
+# -------------------------------------------------
 # Project paths
+# -------------------------------------------------
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 OUTPUT_DIR = BASE_DIR / "src" / "analysis_output"
 
+
+# -------------------------------------------------
 # Load Pre-trained Model & Feature Columns
+# -------------------------------------------------
+
 MODEL_PATH = OUTPUT_DIR / "dt_model_50_split.joblib"
 COLUMNS_PATH = OUTPUT_DIR / "model_columns.joblib"
-dt_model = joblib.load(MODEL_PATH) if MODEL_PATH.exists() else None
-model_columns = joblib.load(COLUMNS_PATH) if COLUMNS_PATH.exists() else []
+
+dt_model = (
+    joblib.load(MODEL_PATH)
+    if MODEL_PATH.exists()
+    else None
+)
+
+model_columns = (
+    joblib.load(COLUMNS_PATH)
+    if COLUMNS_PATH.exists()
+    else []
+)
 
 MODEL_RESULTS = OUTPUT_DIR / "model_comparison.csv"
 
-# Files produced by the export cell in model_experimentation.ipynb
+
+# Files produced by the export cell in
+# model_experimentation.ipynb
 TUNING_RESULTS = OUTPUT_DIR / "tuning_results.csv"
 DEFAULT_VS_TUNED = OUTPUT_DIR / "default_vs_tuned.csv"
 FRACTION_RESULTS = OUTPUT_DIR / "fraction_results.csv"
 SPLIT_RESULTS = OUTPUT_DIR / "split_results.csv"
 
-# Make `src/` importable no matter how the app is launched
+
+# -------------------------------------------------
+# Make src/ importable no matter how app is launched
+# -------------------------------------------------
+
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
-# Model registry + deployment interface (SQLite)
-from deploy_routes import deploy_bp
-from src.model_registry import DEFAULT_MODEL_NAME, list_versions
-from src.serving import predict as serve_prediction, prediction_stats
+
+# -------------------------------------------------
+# Model registry + deployment interface
+# -------------------------------------------------
+
+from .deploy_routes import deploy_bp
+from src.model_registry import (
+    DEFAULT_MODEL_NAME,
+    list_versions
+)
+from src.serving import (
+    predict as serve_prediction,
+    prediction_stats
+)
 
 app.register_blueprint(deploy_bp)
 
 
-# Load model results (baseline comparison)
+# -------------------------------------------------
+# Load model results
+# -------------------------------------------------
+
 def load_model_results():
     results_df = pd.read_csv(MODEL_RESULTS)
 
-    model_results = results_df.to_dict(orient="records")
+    model_results = results_df.to_dict(
+        orient="records"
+    )
 
     best_model = results_df.loc[
         results_df["test_acc"].idxmax()
@@ -57,119 +109,262 @@ def load_model_results():
 
 
 def _read_csv_or_none(path):
-    """Return a DataFrame, or None if the experiment file hasn't been exported yet."""
+    """
+    Return a DataFrame, or None if the experiment
+    file hasn't been exported yet.
+    """
+
     if not path.exists():
-        print(f"Missing experiment file: {path.name}")
+        print(
+            f"Missing experiment file: {path.name}"
+        )
         return None
+
     return pd.read_csv(path)
 
 
-# Load experiment results (tuning, training-size curves, split study)
+# -------------------------------------------------
+# Load experiment results
+# -------------------------------------------------
+
 def load_experiment_results():
-    tuning_df = _read_csv_or_none(TUNING_RESULTS)
-    compare_df = _read_csv_or_none(DEFAULT_VS_TUNED)
-    fraction_df = _read_csv_or_none(FRACTION_RESULTS)
-    split_df = _read_csv_or_none(SPLIT_RESULTS)
-
-    tuning = []
-    if tuning_df is not None:
-        tuning = tuning_df.to_dict(orient="records")
-        for row in tuning:
-            row["best_params"] = json.loads(row["best_params"])
-
-    default_vs_tuned = (
-        compare_df.to_dict(orient="records") if compare_df is not None else []
+    tuning_df = _read_csv_or_none(
+        TUNING_RESULTS
     )
 
-    # Shape for charting: fraction_curves[param_set][model] = {fractions, train, test}
+    compare_df = _read_csv_or_none(
+        DEFAULT_VS_TUNED
+    )
+
+    fraction_df = _read_csv_or_none(
+        FRACTION_RESULTS
+    )
+
+    split_df = _read_csv_or_none(
+        SPLIT_RESULTS
+    )
+
+    tuning = []
+
+    if tuning_df is not None:
+        tuning = tuning_df.to_dict(
+            orient="records"
+        )
+
+        for row in tuning:
+            row["best_params"] = json.loads(
+                row["best_params"]
+            )
+
+    default_vs_tuned = (
+        compare_df.to_dict(orient="records")
+        if compare_df is not None
+        else []
+    )
+
+    # Shape for charting:
+    # fraction_curves[param_set][model]
+    # = {fractions, train, test}
+
     fraction_curves = {}
+
     if fraction_df is not None:
-        for (pset, model), grp in fraction_df.groupby(["param_set", "model"]):
-            grp = grp.sort_values("fraction")
-            fraction_curves.setdefault(pset, {})[model] = {
-                "fractions": (grp["fraction"] * 100).round().astype(int).tolist(),
-                "train_acc": grp["train_acc_mean"].tolist(),
-                "test_acc": grp["test_acc_mean"].tolist(),
+
+        for (pset, model), grp in (
+            fraction_df.groupby(
+                ["param_set", "model"]
+            )
+        ):
+            grp = grp.sort_values(
+                "fraction"
+            )
+
+            fraction_curves.setdefault(
+                pset, {}
+            )[model] = {
+
+                "fractions": (
+                    grp["fraction"] * 100
+                )
+                .round()
+                .astype(int)
+                .tolist(),
+
+                "train_acc":
+                    grp["train_acc_mean"]
+                    .tolist(),
+
+                "test_acc":
+                    grp["test_acc_mean"]
+                    .tolist(),
             }
 
-    # Best (model, split, fraction) combinations by test accuracy
+    # Best model/split/fraction combinations
+    # by test accuracy
+
     top_splits = []
+
     if split_df is not None:
         top_splits = (
-            split_df.sort_values("test_acc", ascending=False)
+            split_df
+            .sort_values(
+                "test_acc",
+                ascending=False
+            )
             .head(10)
-            .to_dict(orient="records")
+            .to_dict(
+                orient="records"
+            )
         )
 
     return {
         "tuning": tuning,
-        "default_vs_tuned": default_vs_tuned,
-        "fraction_curves": fraction_curves,
-        "top_splits": top_splits,
+        "default_vs_tuned":
+            default_vs_tuned,
+        "fraction_curves":
+            fraction_curves,
+        "top_splits":
+            top_splits,
     }
 
 
-# Best tuned model (by test accuracy at 100% of training data)
-def get_best_tuned_model(experiment_results):
+# -------------------------------------------------
+# Best tuned model
+# -------------------------------------------------
+
+def get_best_tuned_model(
+    experiment_results
+):
+
     tuned = [
-        r for r in experiment_results["default_vs_tuned"]
+        r
+        for r in experiment_results[
+            "default_vs_tuned"
+        ]
         if r["param_set"] == "tuned"
     ]
+
     if not tuned:
         return None
-    return max(tuned, key=lambda r: r["test_acc"])
+
+    return max(
+        tuned,
+        key=lambda r: r["test_acc"]
+    )
 
 
+# -------------------------------------------------
 # Dashboard
+# -------------------------------------------------
+
 @app.route("/")
 def home():
-    model_results, best_model = load_model_results()
-    experiment_results = load_experiment_results()
+
+    model_results, best_model = (
+        load_model_results()
+    )
+
+    experiment_results = (
+        load_experiment_results()
+    )
 
     return render_template(
         "index.html",
         model_results=model_results,
         best_model=best_model,
-        best_tuned_model=get_best_tuned_model(experiment_results),
+        best_tuned_model=(
+            get_best_tuned_model(
+                experiment_results
+            )
+        ),
     )
 
 
+# -------------------------------------------------
 # Models
+# -------------------------------------------------
+
 @app.route("/models")
 def models():
-    model_results, best_model = load_model_results()
-    experiment_results = load_experiment_results()
+
+    model_results, best_model = (
+        load_model_results()
+    )
+
+    experiment_results = (
+        load_experiment_results()
+    )
 
     return render_template(
         "models.html",
         model_results=model_results,
         best_model=best_model,
-        tuning=experiment_results["tuning"],
-        default_vs_tuned=experiment_results["default_vs_tuned"],
-        registry_versions=list_versions(DEFAULT_MODEL_NAME)
+        tuning=experiment_results[
+            "tuning"
+        ],
+        default_vs_tuned=(
+            experiment_results[
+                "default_vs_tuned"
+            ]
+        ),
+        registry_versions=(
+            list_versions(
+                DEFAULT_MODEL_NAME
+            )
+        )
     )
 
 
+# -------------------------------------------------
 # Experiments
+# -------------------------------------------------
+
 @app.route("/experiments")
 def experiments():
-    model_results, best_model = load_model_results()
-    experiment_results = load_experiment_results()
+
+    model_results, best_model = (
+        load_model_results()
+    )
+
+    experiment_results = (
+        load_experiment_results()
+    )
 
     return render_template(
         "experiments.html",
         model_results=model_results,
         best_model=best_model,
-        tuning=experiment_results["tuning"],
-        default_vs_tuned=experiment_results["default_vs_tuned"],
-        fraction_curves=experiment_results["fraction_curves"],
-        top_splits=experiment_results["top_splits"],
+        tuning=experiment_results[
+            "tuning"
+        ],
+        default_vs_tuned=(
+            experiment_results[
+                "default_vs_tuned"
+            ]
+        ),
+        fraction_curves=(
+            experiment_results[
+                "fraction_curves"
+            ]
+        ),
+        top_splits=(
+            experiment_results[
+                "top_splits"
+            ]
+        ),
     )
 
+
+# -------------------------------------------------
 # Demo
+# -------------------------------------------------
+
 @app.route("/demo")
 def demo():
-    model_results, best_model = load_model_results()
+
+    model_results, best_model = (
+        load_model_results()
+    )
 
     return render_template(
         "demo.html",
@@ -177,28 +372,54 @@ def demo():
         best_model=best_model
     )
 
+
+# -------------------------------------------------
 # Real-Time Inference API
+# -------------------------------------------------
 # Allows the Demo page to test v7, v8, or v9.
-# This does NOT change which model is marked as Production.
-@app.route("/predict", methods=["POST"])
+# This does NOT change which model is marked
+# as Production.
+
+@app.route(
+    "/predict",
+    methods=["POST"]
+)
 def predict():
+
     try:
+
         data = request.get_json() or {}
 
-        # Model version selected on the Demo page
-        selected_version = data.pop("model_version", None)
+        # Model version selected on Demo page
+        selected_version = data.pop(
+            "model_version",
+            None
+        )
 
         if selected_version is not None:
-            selected_version = int(selected_version)
+            selected_version = int(
+                selected_version
+            )
 
-        # Only allow the three final registered models
-        if selected_version not in [7, 8, 9]:
+        # Only allow final registered models
+        if selected_version not in [
+            7,
+            8,
+            9
+        ]:
+
             return jsonify({
-                "error": "Please select model version v7, v8, or v9."
+                "error":
+                    "Please select model version "
+                    "v7, v8, or v9."
             }), 400
 
-        # Score the booking using the selected registered model.
-        # This does not promote/archive/change the model stage.
+        # Score booking using selected
+        # registered model.
+        #
+        # This does not promote/archive/change
+        # the model stage.
+
         result = serve_prediction(
             DEFAULT_MODEL_NAME,
             [data],
@@ -206,30 +427,44 @@ def predict():
             log=True
         )
 
-        prediction_result = result["results"][0]
-
-        prediction = int(
-            prediction_result["prediction"]
+        prediction_result = (
+            result["results"][0]
         )
 
-        probability_canceled = prediction_result.get(
-            "probability"
+        prediction = int(
+            prediction_result[
+                "prediction"
+            ]
+        )
+
+        probability_canceled = (
+            prediction_result.get(
+                "probability"
+            )
         )
 
         if probability_canceled is None:
+
             probability_canceled = (
-                1.0 if prediction == 1 else 0.0
+                1.0
+                if prediction == 1
+                else 0.0
             )
 
         # v8 is the current Production model
+
         stage = (
             "Production"
-            if int(result["version"]) == 8
+            if int(
+                result["version"]
+            ) == 8
             else "Archived / Comparison"
         )
 
         return jsonify({
-            "prediction": prediction,
+
+            "prediction":
+                prediction,
 
             "status":
                 "Canceled"
@@ -237,29 +472,53 @@ def predict():
                 else "Not Canceled",
 
             "probability_canceled":
-                float(probability_canceled),
+                float(
+                    probability_canceled
+                ),
 
             "probability_not_canceled":
-                float(1 - probability_canceled),
+                float(
+                    1
+                    - probability_canceled
+                ),
 
-            "model": result["model"],
-            "version": result["version"],
-            "algorithm": result["algorithm"],
-            "stage": stage,
-            "latency_ms": result["latency_ms"]
+            "model":
+                result["model"],
+
+            "version":
+                result["version"],
+
+            "algorithm":
+                result["algorithm"],
+
+            "stage":
+                stage,
+
+            "latency_ms":
+                result["latency_ms"]
         })
 
     except Exception as e:
+
         return jsonify({
             "error": str(e)
         }), 400
 
+
+# -------------------------------------------------
 # Monitoring
+# -------------------------------------------------
+
 @app.route("/monitoring")
 def monitoring():
-    model_results, best_model = load_model_results()
 
-    live_stats = prediction_stats(DEFAULT_MODEL_NAME)
+    model_results, best_model = (
+        load_model_results()
+    )
+
+    live_stats = prediction_stats(
+        DEFAULT_MODEL_NAME
+    )
 
     return render_template(
         "monitoring.html",
@@ -268,72 +527,175 @@ def monitoring():
         live_stats=live_stats
     )
 
+
 @app.route("/api/monitoring/stats")
 def monitoring_stats():
-    live_stats = prediction_stats(DEFAULT_MODEL_NAME)
 
-    total_predictions = sum(stat["n"] for stat in live_stats)
+    live_stats = prediction_stats(
+        DEFAULT_MODEL_NAME
+    )
+
+    total_predictions = sum(
+        stat["n"]
+        for stat in live_stats
+    )
 
     return {
-        "total_predictions": total_predictions,
-        "versions_with_activity": len(live_stats),
-        "stats": live_stats
+        "total_predictions":
+            total_predictions,
+
+        "versions_with_activity":
+            len(live_stats),
+
+        "stats":
+            live_stats
     }
 
 
+# -------------------------------------------------
 # AI Insights
+# -------------------------------------------------
+
 @app.route("/ai-insights")
 def ai_insights():
-    model_results, best_model = load_model_results()
+
+    model_results, best_model = (
+        load_model_results()
+    )
 
     performance_insights = None
     optimization_suggestions = None
     deployment_readiness = None
     ai_error = None
 
-    # Final registered model versions used throughout the application.
+    # Final registered model versions
+    # used throughout the application.
+
     final_models = {
+
         "v7": {
-            "model": "Logistic Regression",
-            "train_accuracy": 0.8100,
-            "test_accuracy": 0.8118,
-            "macro_f1": 0.7883,
-            "roc_auc": 0.8883,
-            "cancellation_recall": 0.6457,
-            "train_test_gap": -0.0018,
-            "stage": "archived"
+
+            "model":
+                "Logistic Regression",
+
+            "train_accuracy":
+                0.8100,
+
+            "test_accuracy":
+                0.8118,
+
+            "macro_f1":
+                0.7883,
+
+            "roc_auc":
+                0.8883,
+
+            "cancellation_recall":
+                0.6457,
+
+            "train_test_gap":
+                -0.0018,
+
+            "stage":
+                "archived"
         },
 
         "v8": {
-            "model": "Decision Tree",
+
+            "model":
+                "Decision Tree",
+
             "configuration": {
                 "max_depth": 12
             },
-            "train_accuracy": 0.8508,
-            "test_accuracy": 0.8322,
-            "macro_f1": 0.8176,
-            "roc_auc": 0.9100,
-            "cancellation_recall": 0.7410,
-            "train_test_gap": 0.0186,
-            "stage": "production"
+
+            "train_accuracy":
+                0.8508,
+
+            "test_accuracy":
+                0.8322,
+
+            "macro_f1":
+                0.8176,
+
+            "roc_auc":
+                0.9100,
+
+            "cancellation_recall":
+                0.7410,
+
+            "train_test_gap":
+                0.0186,
+
+            "stage":
+                "production"
         },
 
         "v9": {
-            "model": "KNN",
-            "train_accuracy": 1.0000,
-            "test_accuracy": 0.8068,
-            "macro_f1": 0.7801,
-            "roc_auc": 0.8789,
-            "cancellation_recall": 0.6185,
-            "train_test_gap": 0.1932,
-            "stage": "archived"
+
+            "model":
+                "KNN",
+
+            "train_accuracy":
+                1.0000,
+
+            "test_accuracy":
+                0.8068,
+
+            "macro_f1":
+                0.7801,
+
+            "roc_auc":
+                0.8789,
+
+            "cancellation_recall":
+                0.6185,
+
+            "train_test_gap":
+                0.1932,
+
+            "stage":
+                "archived"
         }
     }
 
     try:
+
+        # -----------------------------------------
+        # Check AI response cache
+        # -----------------------------------------
+
+        now = time.time()
+
+        ai_data = None
+
+        if (
+            AI_CACHE["data"]
+            and (
+                now
+                - AI_CACHE["time"]
+                < AI_CACHE_SECONDS
+            )
+        ):
+            ai_data = AI_CACHE[
+                "data"
+            ]
+
+        # -----------------------------------------
+        # Anthropic Client
+        # -----------------------------------------
+
         client = Anthropic(
-            api_key=os.getenv("ANTHROPIC_API_KEY")
+            api_key=os.getenv(
+                "ANTHROPIC_API_KEY"
+            ),
+            max_retries=3,
+            timeout=60,
         )
+
+        # -----------------------------------------
+        # AI Prompt
+        # -----------------------------------------
 
         prompt = f"""
 You are the AI assistant inside an ML Workflow Optimizer.
@@ -464,58 +826,176 @@ Do not use Markdown.
 Do not include text before or after the JSON.
 """
 
-        message = client.messages.create(
-            model="claude-sonnet-5-5",
-            max_tokens=1500,
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt
-                }
+        # -----------------------------------------
+        # Request AI response only when cache
+        # does not already contain a valid result
+        # -----------------------------------------
+
+        if ai_data is None:
+
+            last_error = None
+
+            for attempt in range(3):
+
+                try:
+
+                    message = (
+                        client.messages.create(
+                            model=(
+                                "claude-sonnet-5-5"
+                            ),
+                            max_tokens=2000,
+                            messages=[
+                                {
+                                    "role":
+                                        "user",
+                                    "content":
+                                        prompt
+                                }
+                            ],
+                        )
+                    )
+
+                    # Anthropic responses can
+                    # contain ThinkingBlock objects.
+                    # Only join text blocks.
+
+                    response_text = "".join(
+                        block.text
+                        for block
+                        in message.content
+                        if getattr(
+                            block,
+                            "type",
+                            None
+                        ) == "text"
+                    ).strip()
+
+                    # Guard against accidental
+                    # ```json fences.
+
+                    if response_text.startswith(
+                        "```"
+                    ):
+
+                        response_text = (
+                            response_text
+                            .strip("`")
+                        )
+
+                        response_text = (
+                            response_text
+                            .removeprefix(
+                                "json"
+                            )
+                            .strip()
+                        )
+
+                    # Parse JSON response
+
+                    parsed = json.loads(
+                        response_text
+                    )
+
+                    # Validate all required
+                    # sections before accepting
+                    # the response.
+
+                    parsed[
+                        "performance_insights"
+                    ]
+
+                    parsed[
+                        "optimization_suggestions"
+                    ]
+
+                    parsed[
+                        "deployment_readiness"
+                    ]
+
+                    # Successful response
+
+                    ai_data = parsed
+
+                    # Store successful result
+                    # in the one-hour cache.
+
+                    AI_CACHE[
+                        "data"
+                    ] = parsed
+
+                    AI_CACHE[
+                        "time"
+                    ] = time.time()
+
+                    break
+
+                except Exception as e:
+
+                    last_error = e
+
+                    # Brief delay before retry
+                    time.sleep(1)
+
+            # All three attempts failed
+
+            if ai_data is None:
+                raise last_error
+
+        # -----------------------------------------
+        # Extract validated AI sections
+        # -----------------------------------------
+
+        performance_insights = (
+            ai_data[
+                "performance_insights"
             ]
         )
 
-        response_text = "".join(
-            block.text
-            for block in message.content
-            if getattr(block, "type", None) == "text"
-        ).strip()
+        optimization_suggestions = (
+            ai_data[
+                "optimization_suggestions"
+            ]
+        )
 
-        # Guard against accidental ```json fences
-        if response_text.startswith("```"):
-            response_text = response_text.strip("`")
-            response_text = response_text.removeprefix("json").strip()
-
-        ai_data = json.loads(response_text)
-
-        performance_insights = ai_data[
-            "performance_insights"
-        ]
-
-        optimization_suggestions = ai_data[
-            "optimization_suggestions"
-        ]
-
-        deployment_readiness = ai_data[
-            "deployment_readiness"
-        ]
+        deployment_readiness = (
+            ai_data[
+                "deployment_readiness"
+            ]
+        )
 
     except Exception as error:
-        print("Anthropic API error:", error)
+
+        print(
+            "Anthropic API error:",
+            error
+        )
 
         ai_error = (
-            "AI recommendations are temporarily unavailable."
+            "AI recommendations are "
+            "temporarily unavailable."
         )
 
     return render_template(
         "ai_insights.html",
         model_results=model_results,
         best_model=best_model,
-        performance_insights=performance_insights,
-        optimization_suggestions=optimization_suggestions,
-        deployment_readiness=deployment_readiness,
+        performance_insights=(
+            performance_insights
+        ),
+        optimization_suggestions=(
+            optimization_suggestions
+        ),
+        deployment_readiness=(
+            deployment_readiness
+        ),
         ai_error=ai_error
     )
+
+
+# -------------------------------------------------
+# Local development
+# -------------------------------------------------
 
 if __name__ == "__main__":
     app.run(debug=True)
