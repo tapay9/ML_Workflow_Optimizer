@@ -13,9 +13,10 @@
     <style>
         .demo-container {
             display: grid;
-            grid-template-columns: 1.5fr 0.8fr;
+            grid-template-columns: 1.15fr 1fr;
             gap: 24px;
             margin-top: 28px;
+            align-items: start;
         }
 
         .demo-panel {
@@ -33,38 +34,102 @@
         .demo-description {
             color: #8f9bad;
             margin-bottom: 22px;
+            line-height: 1.5;
         }
 
-        .model-selector {
-            margin-bottom: 24px;
+        .model-control {
             padding: 18px;
+            margin-bottom: 24px;
+            background: #0d141e;
             border: 1px solid #343f50;
             border-radius: 10px;
-            background: #0d141e;
         }
 
-        .model-selector label {
+        .model-control label {
             display: block;
-            font-size: 13px;
-            font-weight: 700;
-            color: #8f9bad;
+            font-size: 12px;
+            font-weight: 800;
+            color: #a99cff;
             margin-bottom: 8px;
         }
 
-        .model-selector select {
+        .model-select {
             width: 100%;
-            padding: 11px 12px;
-            border-radius: 7px;
+            padding: 11px;
+            border-radius: 6px;
             border: 1px solid #3a4658;
             background: #ffffff;
             color: #111111;
             font-size: 14px;
+            box-sizing: border-box;
         }
 
-        .production-note {
-            margin-top: 10px;
-            font-size: 12px;
+        .model-status-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 14px;
+        }
+
+        .status-text {
             color: #8f9bad;
+            font-size: 13px;
+        }
+
+        .stage-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .stage-badge.production {
+            background: rgba(108, 92, 231, 0.18);
+            color: #b9afff;
+            border: 1px solid #6c5ce7;
+        }
+
+        .stage-badge.archived {
+            background: #202a38;
+            color: #aeb8c6;
+            border: 1px solid #343f50;
+        }
+
+        .deploy-button {
+            width: 100%;
+            margin-top: 14px;
+            padding: 11px;
+            border: 1px solid #6c5ce7;
+            border-radius: 7px;
+            background: transparent;
+            color: #b9afff;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .deploy-button:hover {
+            background: rgba(108, 92, 231, 0.12);
+        }
+
+        .deploy-button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .deployment-message {
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-radius: 7px;
+            background: rgba(108, 92, 231, 0.08);
+            border: 1px solid rgba(108, 92, 231, 0.25);
+            color: #b9afff;
+            font-size: 12px;
+            line-height: 1.5;
+            display: none;
         }
 
         .input-grid {
@@ -93,12 +158,14 @@
             background: #ffffff;
             color: #111111;
             font-size: 14px;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .predict-button {
             width: 100%;
             margin-top: 22px;
-            padding: 12px;
+            padding: 13px;
             border: none;
             border-radius: 7px;
             background: #6c5ce7;
@@ -112,53 +179,95 @@
             opacity: 0.9;
         }
 
+        .predict-button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
         .output-placeholder {
             color: #7f8a9a;
             text-align: center;
             padding: 45px 10px;
+            line-height: 1.6;
+        }
+
+        .model-result-card {
+            background: #0d141e;
+            border: 1px solid #6c5ce7;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .result-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .result-card-header h3 {
+            margin: 0 0 4px;
+            font-size: 17px;
+        }
+
+        .version-label {
+            color: #8f9bad;
+            font-size: 12px;
+        }
+
+        .production-badge {
+            display: inline-block;
+            padding: 4px 9px;
+            border-radius: 20px;
+            background: rgba(108, 92, 231, 0.18);
+            color: #a99cff;
+            font-size: 11px;
+            font-weight: 700;
         }
 
         .prediction-status {
-            font-size: 28px;
+            font-size: 25px;
             font-weight: 800;
-            margin: 16px 0 6px;
+            margin: 18px 0 4px;
         }
 
         .prediction-subtitle {
             color: #8f9bad;
-            margin-bottom: 24px;
+            font-size: 12px;
+            margin-bottom: 16px;
         }
 
         .probability-box {
-            padding: 18px;
-            background: #0d141e;
+            padding: 14px;
+            background: #111925;
             border: 1px solid #343f50;
-            border-radius: 9px;
-            margin-bottom: 20px;
+            border-radius: 8px;
+            margin-bottom: 14px;
         }
 
         .probability-label {
             color: #8f9bad;
-            font-size: 12px;
-            margin-bottom: 7px;
+            font-size: 11px;
+            margin-bottom: 6px;
         }
 
         .probability-value {
-            font-size: 30px;
+            font-size: 26px;
             font-weight: 800;
         }
 
         .result-details {
             border-top: 1px solid #303b4b;
-            margin-top: 18px;
         }
 
         .result-row {
             display: flex;
             justify-content: space-between;
             gap: 20px;
-            padding: 12px 0;
+            padding: 10px 0;
             border-bottom: 1px solid #303b4b;
+            font-size: 13px;
         }
 
         .result-row span {
@@ -169,38 +278,21 @@
             text-align: right;
         }
 
-        .production-badge {
-            display: inline-block;
-            padding: 4px 9px;
-            border-radius: 20px;
-            background: rgba(108, 92, 231, 0.18);
-            color: #a99cff;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        .comparison-badge {
-            display: inline-block;
-            padding: 4px 9px;
-            border-radius: 20px;
-            background: #202a38;
-            color: #aeb8c6;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
         .error-message {
             padding: 16px;
             border: 1px solid #663c3c;
             background: #261818;
             border-radius: 8px;
+            color: #f0b5b5;
         }
 
-        @media (max-width: 1000px) {
+        @media (max-width: 1100px) {
             .demo-container {
                 grid-template-columns: 1fr;
             }
+        }
 
+        @media (max-width: 800px) {
             .input-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
@@ -218,15 +310,14 @@
 
 <div class="dashboard-container">
 
-    <!-- Sidebar -->
     <aside class="sidebar">
 
-        <div class="brand">
-            <div class="brand-icon">ML</div>
+        <div class="sidebar-brand">
+            <div class="brand-icon">MP</div>
 
-            <div>
-                <h2>ML Workflow</h2>
-                <span>Optimizer</span>
+            <div class="brand-text">
+                <h2>ModelPilot</h2>
+                <span>ML Workflow Optimizer</span>
             </div>
         </div>
 
@@ -261,7 +352,7 @@
                 <span>⇪</span>
                 Deployment
             </a>
-            
+
             <a href="{{ url_for('demo') }}" class="nav-item active">
                 <span>⚡</span>
                 Demo
@@ -277,7 +368,6 @@
     </aside>
 
 
-    <!-- Main Content -->
     <main class="main-content">
 
         <header class="dashboard-header">
@@ -288,8 +378,8 @@
                 <h1>Real-Time Prediction Demo</h1>
 
                 <p class="subtitle">
-                    Compare predictions from the final registered
-                    hotel cancellation models.
+                    Deploy a registered model to Production and
+                    test real-time hotel cancellation predictions.
                 </p>
             </div>
 
@@ -303,32 +393,35 @@
 
         <div class="demo-container">
 
-            <!-- Input Panel -->
+            <!-- INPUT -->
             <section class="demo-panel">
 
                 <h2>Booking Parameters</h2>
 
                 <p class="demo-description">
-                    Select a model and enter hotel booking information
-                    to generate a real-time cancellation prediction.
+                    Choose a registered model, deploy it to Production,
+                    then run as many predictions as needed.
                 </p>
 
 
-                <!-- Model Selection -->
-                <div class="model-selector">
+                <!-- MODEL SELECTOR -->
+                <div class="model-control">
 
-                    <label for="model_version">
+                    <label for="modelVersion">
                         MODEL VERSION
                     </label>
 
-                    <select id="model_version">
+                    <select
+                        id="modelVersion"
+                        class="model-select"
+                        onchange="modelSelectionChanged()">
 
                         <option value="7">
                             v7 — Logistic Regression
                         </option>
 
                         <option value="8" selected>
-                            v8 — Decision Tree (Production)
+                            v8 — Decision Tree
                         </option>
 
                         <option value="9">
@@ -337,58 +430,83 @@
 
                     </select>
 
-                    <p class="production-note">
-                        v8 remains the deployed Production model.
-                        Selecting v7 or v9 here is for comparison only.
-                    </p>
+
+                    <div class="model-status-row">
+
+                        <span class="status-text">
+                            Selected Model Status
+                        </span>
+
+                        <span
+                            id="modelStage"
+                            class="stage-badge production">
+                            Production
+                        </span>
+
+                    </div>
+
+
+                    <button
+                        id="deployButton"
+                        class="deploy-button"
+                        type="button"
+                        onclick="deploySelectedModel()"
+                        disabled>
+
+                        v8 is already in Production
+
+                    </button>
+
+
+                    <div
+                        id="deploymentMessage"
+                        class="deployment-message">
+                    </div>
 
                 </div>
 
 
-                <!-- Final Model Inputs -->
+                <!-- INPUTS -->
                 <div class="input-grid">
 
                     <div class="input-group">
                         <label>Lead Time (days)</label>
-                        <input id="lead_time"
-                               type="number"
-                               value="7">
+                        <input id="lead_time" type="number" value="7">
                     </div>
-
 
                     <div class="input-group">
                         <label>Arrival Week</label>
-                        <input id="arrival_date_week_number"
-                               type="number"
-                               value="1">
+                        <input
+                            id="arrival_date_week_number"
+                            type="number"
+                            value="1">
                     </div>
-
 
                     <div class="input-group">
                         <label>Arrival Day of Month</label>
-                        <input id="arrival_date_day_of_month"
-                               type="number"
-                               value="1">
+                        <input
+                            id="arrival_date_day_of_month"
+                            type="number"
+                            value="1">
                     </div>
-
 
                     <div class="input-group">
                         <label>Total Guests</label>
-                        <input id="total_guests"
-                               type="number"
-                               value="2"
-                               min="1">
+                        <input
+                            id="total_guests"
+                            type="number"
+                            value="2"
+                            min="1">
                     </div>
-
 
                     <div class="input-group">
                         <label>Total Nights</label>
-                        <input id="total_nights"
-                               type="number"
-                               value="3"
-                               min="1">
+                        <input
+                            id="total_nights"
+                            type="number"
+                            value="3"
+                            min="1">
                     </div>
-
 
                     <div class="input-group">
                         <label>Repeated Guest</label>
@@ -399,127 +517,120 @@
                         </select>
                     </div>
 
-
                     <div class="input-group">
                         <label>Previous Cancellations</label>
-                        <input id="previous_cancellations"
-                               type="number"
-                               value="0">
+                        <input
+                            id="previous_cancellations"
+                            type="number"
+                            value="0">
                     </div>
-
 
                     <div class="input-group">
                         <label>Previous Bookings Not Canceled</label>
-                        <input id="previous_bookings_not_canceled"
-                               type="number"
-                               value="0">
+                        <input
+                            id="previous_bookings_not_canceled"
+                            type="number"
+                            value="0">
                     </div>
-
 
                     <div class="input-group">
                         <label>Booking Changes</label>
-                        <input id="booking_changes"
-                               type="number"
-                               value="0">
+                        <input
+                            id="booking_changes"
+                            type="number"
+                            value="0">
                     </div>
-
 
                     <div class="input-group">
                         <label>Waiting List Days</label>
-                        <input id="days_in_waiting_list"
-                               type="number"
-                               value="0">
+                        <input
+                            id="days_in_waiting_list"
+                            type="number"
+                            value="0">
                     </div>
-
 
                     <div class="input-group">
                         <label>Average Daily Rate (ADR)</label>
-                        <input id="adr"
-                               type="number"
-                               step="0.01"
-                               value="100">
+                        <input
+                            id="adr"
+                            type="number"
+                            step="0.01"
+                            value="100">
                     </div>
-
 
                     <div class="input-group">
                         <label>Car Parking Spaces</label>
-                        <input id="required_car_parking_spaces"
-                               type="number"
-                               value="0">
+                        <input
+                            id="required_car_parking_spaces"
+                            type="number"
+                            value="0">
                     </div>
-
 
                     <div class="input-group">
                         <label>Special Requests</label>
-                        <input id="total_of_special_requests"
-                               type="number"
-                               value="0">
+                        <input
+                            id="total_of_special_requests"
+                            type="number"
+                            value="0">
                     </div>
-
 
                     <div class="input-group">
                         <label>Meal</label>
-                        <input id="meal"
-                               type="text"
-                               value="BB">
+                        <input id="meal" type="text" value="BB">
                     </div>
-
 
                     <div class="input-group">
                         <label>Country</label>
-                        <input id="country"
-                               type="text"
-                               value="PRT">
+                        <input id="country" type="text" value="PRT">
                     </div>
-
 
                     <div class="input-group">
                         <label>Market Segment</label>
-                        <input id="market_segment"
-                               type="text"
-                               value="Online TA">
+                        <input
+                            id="market_segment"
+                            type="text"
+                            value="Online TA">
                     </div>
-
 
                     <div class="input-group">
                         <label>Distribution Channel</label>
-                        <input id="distribution_channel"
-                               type="text"
-                               value="TA/TO">
+                        <input
+                            id="distribution_channel"
+                            type="text"
+                            value="TA/TO">
                     </div>
-
 
                     <div class="input-group">
                         <label>Reserved Room Type</label>
-                        <input id="reserved_room_type"
-                               type="text"
-                               value="A">
+                        <input
+                            id="reserved_room_type"
+                            type="text"
+                            value="A">
                     </div>
-
 
                     <div class="input-group">
                         <label>Deposit Type</label>
-                        <input id="deposit_type"
-                               type="text"
-                               value="No Deposit">
+                        <input
+                            id="deposit_type"
+                            type="text"
+                            value="No Deposit">
                     </div>
-
 
                     <div class="input-group">
                         <label>Customer Type</label>
-                        <input id="customer_type"
-                               type="text"
-                               value="Transient">
+                        <input
+                            id="customer_type"
+                            type="text"
+                            value="Transient">
                     </div>
-
 
                     <div class="input-group">
                         <label>City</label>
-                        <input id="city"
-                               type="text"
-                               value="Lisbon">
+                        <input
+                            id="city"
+                            type="text"
+                            value="Lisbon">
                     </div>
-
 
                     <div class="input-group">
                         <label>Hotel Type</label>
@@ -541,6 +652,7 @@
                 <button
                     class="predict-button"
                     id="predictButton"
+                    type="button"
                     onclick="runPrediction()">
 
                     Run Prediction
@@ -550,19 +662,21 @@
             </section>
 
 
-            <!-- Output Panel -->
+            <!-- OUTPUT -->
             <section class="demo-panel">
 
-                <h2>Model Output</h2>
+                <h2>Prediction Result</h2>
+
+                <p class="demo-description">
+                    The prediction from the currently selected
+                    Production model will appear below.
+                </p>
 
                 <div id="modelOutput">
 
                     <div class="output-placeholder">
-
-                        Select a model and click
-                        <strong>Run Prediction</strong>
-                        to compute real-time inference.
-
+                        Select a model, deploy it to Production,
+                        and click <strong>Run Prediction</strong>.
                     </div>
 
                 </div>
@@ -578,27 +692,225 @@
 
 <script>
 
-async function runPrediction() {
-
-    const button =
-        document.getElementById("predictButton");
-
-    const output =
-        document.getElementById("modelOutput");
+let productionVersion = 8;
 
 
-    button.disabled = true;
-    button.textContent = "Running Prediction...";
+/* -----------------------------------------
+   MODEL INFORMATION
+----------------------------------------- */
+
+const modelNames = {
+    7: "Logistic Regression",
+    8: "Decision Tree",
+    9: "KNN"
+};
 
 
-    const payload = {
+function selectedVersion() {
+    return Number(
+        document.getElementById(
+            "modelVersion"
+        ).value
+    );
+}
+
+
+/* -----------------------------------------
+   UPDATE SELECTOR DISPLAY
+----------------------------------------- */
+
+function modelSelectionChanged() {
+
+    const version = selectedVersion();
+
+    const stage =
+        document.getElementById(
+            "modelStage"
+        );
+
+    const deployButton =
+        document.getElementById(
+            "deployButton"
+        );
+
+    const message =
+        document.getElementById(
+            "deploymentMessage"
+        );
+
+
+    message.style.display = "none";
+
+
+    if (version === productionVersion) {
+
+        stage.textContent =
+            "Production";
+
+        stage.className =
+            "stage-badge production";
+
+        deployButton.disabled = true;
+
+        deployButton.textContent =
+            `v${version} is already in Production`;
+
+    } else {
+
+        stage.textContent =
+            "Not Production";
+
+        stage.className =
+            "stage-badge archived";
+
+        deployButton.disabled = false;
+
+        deployButton.textContent =
+            `Deploy v${version} to Production`;
+    }
+}
+
+
+/* -----------------------------------------
+   DEPLOY SELECTED MODEL
+----------------------------------------- */
+
+async function deploySelectedModel() {
+
+    const version = selectedVersion();
+
+    const deployButton =
+        document.getElementById(
+            "deployButton"
+        );
+
+    const message =
+        document.getElementById(
+            "deploymentMessage"
+        );
+
+
+    deployButton.disabled = true;
+
+    deployButton.textContent =
+        `Deploying v${version}...`;
+
+
+    try {
+
+        /*
+            This is the same Production-stage endpoint
+            used by the Deployment page.
+        */
+
+        const response = await fetch(
+            `/api/models/hotel_cancellation/versions/${version}/stage`,
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+                    stage: "production",
+                    by: "demo-ui"
+                })
+            }
+        );
+
+
+        let data;
+
+        try {
+            data = await response.json();
+        } catch (error) {
+            throw new Error(
+                "The server returned an invalid deployment response."
+            );
+        }
+
+
+        if (!response.ok || data.error) {
+
+            throw new Error(
+                data.error ||
+                `Unable to deploy v${version}.`
+            );
+        }
+
+
+        productionVersion = version;
+
+
+        message.style.display =
+            "block";
+
+        message.textContent =
+            `✓ v${version} — ${modelNames[version]} is now the Production model.`;
+
+
+        modelSelectionChanged();
+
+
+        /*
+            modelSelectionChanged hides the message,
+            so show the success message again.
+        */
+
+        message.style.display =
+            "block";
+
+        message.textContent =
+            `✓ v${version} — ${modelNames[version]} is now the Production model.`;
+
+
+        document.getElementById(
+            "modelOutput"
+        ).innerHTML = `
+
+            <div class="output-placeholder">
+
+                v${version} — ${modelNames[version]}
+                is now in Production.
+
+                <br><br>
+
+                Click
+                <strong>Run Prediction</strong>
+                to test the model.
+
+            </div>
+        `;
+
+
+    } catch (error) {
+
+        message.style.display =
+            "block";
+
+        message.textContent =
+            `Deployment Error: ${error.message}`;
+
+        deployButton.disabled = false;
+
+        deployButton.textContent =
+            `Deploy v${version} to Production`;
+    }
+}
+
+
+/* -----------------------------------------
+   BUILD PREDICTION PAYLOAD
+----------------------------------------- */
+
+function buildPayload() {
+
+    return {
 
         model_version:
-            parseInt(
-                document.getElementById(
-                    "model_version"
-                ).value
-            ),
+            selectedVersion(),
 
         lead_time:
             Number(
@@ -736,60 +1048,87 @@ async function runPrediction() {
                 "hotel_type"
             ).value
     };
+}
 
 
-    try {
+/* -----------------------------------------
+   DISPLAY RESULT
+----------------------------------------- */
 
-        const response = await fetch(
-            "{{ url_for('predict') }}",
-            {
-                method: "POST",
+function displayResult(data) {
 
-                headers: {
-                    "Content-Type":
-                        "application/json"
-                },
-
-                body: JSON.stringify(payload)
-            }
-        );
+    let algorithm =
+        data.algorithm;
 
 
-        const data = await response.json();
+    if (
+        algorithm ===
+        "LogisticRegression"
+    ) {
+        algorithm =
+            "Logistic Regression";
+    }
 
 
-        if (!response.ok || data.error) {
-
-            throw new Error(
-                data.error ||
-                "Prediction failed."
-            );
-        }
-
-
-        const cancelProbability =
-            data.probability_canceled * 100;
+    if (
+        algorithm ===
+        "DecisionTreeClassifier"
+    ) {
+        algorithm =
+            "Decision Tree";
+    }
 
 
-        const stageClass =
-            data.stage === "Production"
-            ? "production-badge"
-            : "comparison-badge";
+    if (
+        algorithm ===
+        "KNeighborsClassifier"
+    ) {
+        algorithm =
+            "KNN";
+    }
 
 
-        output.innerHTML = `
+    const probability =
+        Number(
+            data.probability_canceled
+        ) * 100;
 
-            <p class="page-label">
-                PREDICTION RESULT
-            </p>
+
+    document.getElementById(
+        "modelOutput"
+    ).innerHTML = `
+
+        <div class="model-result-card">
+
+            <div class="result-card-header">
+
+                <div>
+
+                    <h3>
+                        v${data.version}
+                        — ${algorithm}
+                    </h3>
+
+                    <div class="version-label">
+                        Current Production Model
+                    </div>
+
+                </div>
+
+                <span class="production-badge">
+                    Production
+                </span>
+
+            </div>
+
 
             <div class="prediction-status">
                 ${data.status}
             </div>
 
-            <p class="prediction-subtitle">
+            <div class="prediction-subtitle">
                 Hotel booking cancellation prediction
-            </p>
+            </div>
 
 
             <div class="probability-box">
@@ -799,7 +1138,7 @@ async function runPrediction() {
                 </div>
 
                 <div class="probability-value">
-                    ${cancelProbability.toFixed(1)}%
+                    ${probability.toFixed(1)}%
                 </div>
 
             </div>
@@ -814,28 +1153,23 @@ async function runPrediction() {
                     </strong>
                 </div>
 
-
                 <div class="result-row">
                     <span>Algorithm</span>
                     <strong>
-                        ${data.algorithm}
+                        ${algorithm}
                     </strong>
                 </div>
-
 
                 <div class="result-row">
                     <span>Registry Stage</span>
-
                     <strong>
-                        <span class="${stageClass}">
-                            ${data.stage}
-                        </span>
+                        Production
                     </strong>
                 </div>
 
-
                 <div class="result-row">
                     <span>Latency</span>
+
                     <strong>
                         ${Number(
                             data.latency_ms
@@ -844,7 +1178,110 @@ async function runPrediction() {
                 </div>
 
             </div>
+
+        </div>
+    `;
+}
+
+
+/* -----------------------------------------
+   RUN PREDICTION
+----------------------------------------- */
+
+async function runPrediction() {
+
+    const version =
+        selectedVersion();
+
+    const button =
+        document.getElementById(
+            "predictButton"
+        );
+
+    const output =
+        document.getElementById(
+            "modelOutput"
+        );
+
+
+    /*
+        Do not allow predictions from a model
+        that has not been promoted to Production.
+    */
+
+    if (version !== productionVersion) {
+
+        output.innerHTML = `
+
+            <div class="error-message">
+
+                <strong>
+                    Deploy v${version} first.
+                </strong>
+
+                <p>
+                    v${version} — ${modelNames[version]}
+                    is not currently the Production model.
+                    Click
+                    <strong>
+                        Deploy v${version} to Production
+                    </strong>
+                    before running the prediction.
+                </p>
+
+            </div>
         `;
+
+        return;
+    }
+
+
+    button.disabled = true;
+
+    button.textContent =
+        `Running v${version}...`;
+
+
+    try {
+
+        const response = await fetch(
+            "{{ url_for('predict') }}",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify(
+                    buildPayload()
+                )
+            }
+        );
+
+
+        let data;
+
+        try {
+            data = await response.json();
+        } catch (error) {
+            throw new Error(
+                "The server returned an invalid prediction response."
+            );
+        }
+
+
+        if (!response.ok || data.error) {
+
+            throw new Error(
+                data.error ||
+                "Prediction failed."
+            );
+        }
+
+
+        displayResult(data);
 
 
     } catch (error) {
@@ -864,7 +1301,14 @@ async function runPrediction() {
             </div>
         `;
 
+
     } finally {
+
+        /*
+            ALWAYS re-enable the button.
+            This is what lets you use the same
+            Production model again and again.
+        */
 
         button.disabled = false;
 
@@ -872,6 +1316,13 @@ async function runPrediction() {
             "Run Prediction";
     }
 }
+
+
+/* -----------------------------------------
+   INITIAL PAGE STATE
+----------------------------------------- */
+
+modelSelectionChanged();
 
 </script>
 
