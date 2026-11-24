@@ -98,12 +98,6 @@ The preprocessing pipeline includes:
 * Preparing features for model training
 * Feature engineering
 
-Engineered features include:
-
-* `total_guests`
-* `total_nights`
-* `hotel_type`
-
 Leakage-related information, including reservation status information, was removed before model training.
 
 ---
